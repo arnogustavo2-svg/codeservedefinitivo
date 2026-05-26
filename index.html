@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CodeCollab Pro</title>
+    <meta name="theme-color" content="#0a0a0a">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+    
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top:0; left:0;
+        }
+        
+        #loginPage {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            height:100%;
+            background:#0a0a0a;
+        }
+        
+        .login-box {
+            background:#1a1a1a;
+            border:1px solid #333;
+            border-radius:12px;
+            padding:24px;
+            width:90%;
+            max-width:380px;
+        }
+        
+        .login-box h1 {
+            text-align:center;
+            font-size:24px;
+            margin-bottom:20px;
+        }
+        
+        .login-box input {
+            width:100%;
+            padding:10px;
+            margin:6px 0;
+            background:#0a0a0a;
+            border:1px solid #333;
+            color:#fff;
+            border-radius:6px;
+            font-size:14px;
+        }
+        
+        .login-box button {
+            width:100%;
+            padding:12px;
+            margin:8px 0;
+            border:none;
+            border-radius:6px;
+            font-size:14px;
+            font-weight:bold;
+            cursor:pointer;
+        }
+        
+        .login-box .btn-login {
+            background:#fff;
+            color:#000;
+        }
+        
+        .login-box .btn-register {
+            background:transparent;
+            border:1px solid #555;
+            color:#fff;
+        }
+        
+        .login-box .error {
+            background:#400;
+            color:#f66;
+            padding:8px;
+            border-radius:4px;
+            font-size:12px;
+            margin:8px 0;
+            display:none;
+        }
+        
+        #editorPage {
+            display:none;
+            height:100%;
+            flex-direction:column;
+        }
+        
+        .toolbar {
+            display:flex;
+            padding:8px;
+            background:#1a1a1a;
+            border-bottom:1px solid #333;
+            gap:4px;
+            flex-wrap:wrap;
+        }
+        
+        .toolbar button, .toolbar select {
+            padding:8px 12px;
+            background:#0a0a0a;
+            border:1px solid #333;
+            color:#fff;
+            border-radius:4px;
+            cursor:pointer;
+            font-size:12px;
+        }
+        
+        .toolbar button:hover {
+            background:#222;
+        }
+        
+        .toolbar .run-btn {
+            background:#0a5;
+            border-color:#0a5;
+            color:#fff;
+            font-weight:bold;
+        }
+        
+        .toolbar .logout-btn {
+            background:#a00;
+            border-color:#a00;
+        }
+        
+        .main-area {
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            overflow:hidden;
+        }
+        
+        @media (min-width:768px) {
+            .main-area { flex-direction:row; }
+        }
+        
+        .panel {
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            overflow:hidden;
+            min-height:200px;
+        }
+        
+        .panel-header {
+            padding:4px 10px;
+            background:#1a1a1a;
+            font-size:11px;
+            color:#888;
+            border-bottom:1px solid #333;
+        }
+        
+        .panel-body {
+            flex:1;
+            overflow:hidden;
+        }
+        
+        #codeEditor {
+            width:100%;
+            height:100%;
+            background:#0d0d0d;
+            color:#0f0;
+            border:none;
+            padding:10px;
+            font-family:monospace;
+            font-size:13px;
+            resize:none;
+            outline:none;
+        }
+        
+        #console {
+            background:#0d0d0d;
+            color:#0f0;
+            font-family:monospace;
+            font-size:12px;
+            padding:10px;
+            height:100%;
+            overflow-y:auto;
+            white-space:pre-wrap;
+        }
+        
+        #previewContainer {
+            display:none;
+            height:100%;
+        }
+        
+        #previewFrame {
+            width:100%;
+            height:100%;
+            border:none;
+            background:#fff;
+        }
+        
+        .splitter {
+            width:100%;
+            height:4px;
+            background:#333;
+            cursor:row-resize;
+        }
+        
+        @media (min-width:768px) {
+            .splitter {
+                width:4px;
+                height:auto;
+                cursor:col-resize;
+            }
+        }
+        
+        .modal {
+            display:none;
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.8);
+            z-index:100;
+            align-items:center;
+            justify-content:center;
+        }
+        
+        .modal.show {
+            display:flex;
+        }
+        
+        .modal-content {
+            background:#1a1a1a;
+            border:1px solid #333;
+            border-radius:12px;
+            padding:20px;
+            width:90%;
+            max-width:400px;
+            max-height:80vh;
+            overflow-y:auto;
+        }
+        
+        .modal-content h3 {
+            margin-bottom:12px;
+            font-size:18px;
+        }
+        
+        .modal-content button {
+            width:100%;
+            padding:10px;
+            margin-top:10px;
+            background:#333;
+            color:#fff;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:14px;
+        }
+        
+        .toast {
+            position:fixed;
+            bottom:20px;
+            right:20px;
+            background:#fff;
+            color:#000;
+            padding:10px 16px;
+            border-radius:8px;
+            font-size:12px;
+            font-family:monospace;
+            z-index:200;
+        }
+        
+        .loading {
+            display:none;
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.7);
+            z-index:300;
+            align-items:center;
+            justify-content:center;
+        }
+        
+        .loading.show {
+            display:flex;
+        }
+        
+        .spinner {
+            width:30px;
+            height:30px;
+            border:3px solid #333;
+            border-top:3px solid #888;
+            border-radius:50%;
+            animation:spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform:rotate(360deg); }
+        }
+        
+        .checkbox-row {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin:8px 0;
+            font-size:12px;
+            color:#999;
+        }
+        
+        .checkbox-row input {
+            width:16px;
+            height:16px;
+        }
+        
+        .link {
+            color:#4af;
+            text-decoration:underline;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div id="loginPage">
+        <div class="login-box">
+            <h1>🚀 CodeCollab Pro</h1>
+            <p style="text-align:center;color:#888;font-size:11px;margin-bottom:16px;">Python, JavaScript, HTML, Java, C++ e mais</p>
+            
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Senha">
+            
+            <div id="roomGroup" style="display:none;">
+                <input type="text" id="roomId" placeholder="ID da Sala">
+            </div>
+            
+            <div class="checkbox-row">
+                <input type="checkbox" id="joinRoomCheck">
+                <span>Entrar em sala existente</span>
+            </div>
+            
+            <div class="checkbox-row">
+                <input type="checkbox" id="lgpdCheck">
+                <span>Aceito os <span class="link" onclick="APP.showLegal('terms')">Termos</span> e <span class="link" onclick="APP.showLegal('privacy')">LGPD</span></span>
+            </div>
+            
+            <div class="error" id="errorMsg"></div>
+            
+            <button class="btn-login" id="loginBtn">Entrar</button>
+            <button class="btn-register" id="registerBtn">Criar Conta</button>
+        </div>
+    </div>
+
+    <!-- EDITOR -->
+    <div id="editorPage">
+        <div class="toolbar">
+            <span style="font-weight:bold;color:#fff;">🚀 CodeCollab</span>
+            <span id="roomBadge" style="font-size:10px;color:#888;cursor:pointer;">Sala: ---</span>
+            <select id="langSelect">
+                <option value="html">🌐 HTML</option>
+                <option value="javascript">🟨 JavaScript</option>
+                <option value="python">🐍 Python</option>
+                <option value="java">☕ Java</option>
+                <option value="cpp">⚙️ C++</option>
+                <option value="csharp">🔮 C#</option>
+            </select>
+            <button class="run-btn" id="runBtn">▶ Run</button>
+            <button id="downloadBtn">⬇ Baixar</button>
+            <button id="fullscreenBtn">⛶ Tela Cheia</button>
+            <button id="configBtn">⚙️ Config</button>
+            <button id="membersBtn">👥 Membros</button>
+            <button class="logout-btn" id="logoutBtn">Sair</button>
+        </div>
+
+        <div class="main-area" id="mainArea">
+            <div class="panel" id="editorPanel">
+                <div class="panel-header">📝 Editor</div>
+                <div class="panel-body">
+                    <textarea id="codeEditor"></textarea>
+                </div>
+            </div>
+            
+            <div class="splitter" id="splitter"></div>
+            
+            <div class="panel" id="outputPanel">
+                <div class="panel-header">💻 Console / Preview</div>
+                <div class="panel-body">
+                    <div id="console">// Clique ▶ Run ou pressione Ctrl+Enter para executar</div>
+                    <div id="previewContainer">
+                        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAIS -->
+    <div class="modal" id="configModal">
+        <div class="modal-content">
+            <h3>⚙️ Configurações</h3>
+            <div style="margin:8px 0;">
+                <label>Tema:</label>
+                <select id="themeSelect" style="width:100%;padding:8px;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:4px;margin-top:4px;">
+                    <option value="monokai">Monokai</option>
+                    <option value="default">Default</option>
+                </select>
+            </div>
+            <div style="margin:8px 0;">
+                <label>Fonte: <span id="fontSizeVal">14px</span></label>
+                <input type="range" id="fontSizeSlider" min="10" max="24" value="14" style="width:100%;margin-top:4px;">
+            </div>
+            <div class="checkbox-row">
+                <input type="checkbox" id="autosaveCheck" checked>
+                <span>Auto-save</span>
+            </div>
+            <button onclick="document.getElementById('configModal').classList.remove('show')">Fechar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="membersModal">
+        <div class="modal-content">
+            <h3>👥 Membros</h3>
+            <div id="membersList" style="margin:8px 0;"></div>
+            <button onclick="document.getElementById('membersModal').classList.remove('show')">Fechar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="legalModal">
+        <div class="modal-content">
+            <h3 id="legalTitle"></h3>
+            <div id="legalContent" style="font-size:13px;color:#999;line-height:1.6;"></div>
+            <button onclick="document.getElementById('legalModal').classList.remove('show')">Fechar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="fullscreenModal">
+        <div style="position:fixed;inset:0;background:#000;z-index:150;display:flex;flex-direction:column;">
+            <div style="padding:8px;background:#1a1a1a;display:flex;justify-content:space-between;">
+                <span style="color:#888;">▶ Executando</span>
+                <button onclick="document.getElementById('fullscreenModal').classList.remove('show')" style="background:#a00;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">✕ Fechar</button>
+            </div>
+            <iframe id="fullscreenFrame" sandbox="allow-scripts allow-same-origin" style="flex:1;border:none;background:#fff;"></iframe>
+        </div>
+    </div>
+
+    <div class="loading" id="loadingOverlay">
+        <div style="text-align:center;">
+            <div class="spinner" style="margin:0 auto 14px;"></div>
+            <span style="color:#888;">Carregando...</span>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+    
+    <script>
+        // ==================== INICIALIZAÇÃO ====================
+        
+        // Firebase
+        firebase.initializeApp({
+            apiKey: "AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",
+            authDomain: "codeverse-14794.firebaseapp.com",
+            projectId: "codeverse-14794",
+            storageBucket: "codeverse-14794.firebasestorage.app",
+            messagingSenderId: "307083349125",
+            appId: "1:307083349125:web:11b96a4c3fd856d6236dec"
+        });
+        
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // Templates
+        const templates = {
+            html: '<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <style>\n    body{font-family:sans-serif;padding:20px;background:#f5f5f5;}\n    h1{color:#333;}\n  </style>\n</head>\n<body>\n  <h1>🚀 Olá Mundo!</h1>\n  <p>Seu código HTML aqui.</p>\n  <script>console.log("Funcionando!");</script>\n</body>\n</html>',
+            javascript: '// JavaScript\nconsole.log("Hello, World!");\n\nconst nome = "Dev";\nconsole.log(`Bem-vindo, ${nome}!`);\n',
+            python: '# Python 3\nprint("Hello, World!")\n\nnome = "Dev"\nprint(f"Bem-vindo, {nome}!")\n',
+            java: 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}\n',
+            cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}\n',
+            csharp: 'using System;\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}\n'
+        };
+        
+        // ==================== APLICAÇÃO ====================
+        const APP = {
+            user: null,
+            roomId: null,
+            isOwner: false,
+            editor: null,
+            currentLang: 'html',
+            fontSize: 14,
+            autoSave: true,
+            unsubscribe: null,
+            previewUrl: null,
+            
+            // Inicializar
+            init: function() {
+                console.log('App iniciando...');
+                
+                // Mostrar login
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('editorPage').style.display = 'none';
+                
+                // Eventos dos botões
+                document.getElementById('loginBtn').onclick = function() { APP.login(); };
+                document.getElementById('registerBtn').onclick = function() { APP.register(); };
+                document.getElementById('logoutBtn').onclick = function() { APP.logout(); };
+                document.getElementById('runBtn').onclick = function() { APP.runCode(); };
+                document.getElementById('downloadBtn').onclick = function() { APP.download(); };
+                document.getElementById('fullscreenBtn').onclick = function() { APP.fullscreen(); };
+                document.getElementById('configBtn').onclick = function() { document.getElementById('configModal').classList.add('show'); };
+                document.getElementById('membersBtn').onclick = function() { APP.showMembers(); };
+                document.getElementById('roomBadge').onclick = function() { APP.copyLink(); };
+                
+                // Join room checkbox
+                document.getElementById('joinRoomCheck').onchange = function() {
+                    document.getElementById('roomGroup').style.display = this.checked ? 'block' : 'none';
+                };
+                
+                // Language selector
+                document.getElementById('langSelect').onchange = function() {
+                    APP.changeLanguage(this.value);
+                };
+                
+                // Theme
+                document.getElementById('themeSelect').onchange = function() {
+                    if (APP.editor) APP.editor.setOption('theme', this.value);
+                };
+                
+                // Font size
+                document.getElementById('fontSizeSlider').oninput = function() {
+                    APP.fontSize = parseInt(this.value);
+                    document.getElementById('fontSizeVal').textContent = APP.fontSize + 'px';
+                    if (APP.editor) {
+                        APP.editor.getWrapperElement().style.fontSize = APP.fontSize + 'px';
+                        APP.editor.refresh();
+                    }
+                };
+                
+                // Autosave
+                document.getElementById('autosaveCheck').onchange = function() {
+                    APP.autoSave = this.checked;
+                };
+                
+                // Keyboard
+                document.onkeydown = function(e) {
+                    if (e.key === 'Escape') {
+                        document.querySelectorAll('.modal.show').forEach(function(m) {
+                            m.classList.remove('show');
+                        });
+                    }
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        APP.runCode();
+                    }
+                };
+                
+                // Splitter
+                this.setupSplitter();
+                
+                // Auth state
+                auth.onAuthStateChanged(function(user) {
+                    if (user) {
+                        APP.user = user;
+                        console.log('Usuário logado:', user.email);
+                        var params = new URLSearchParams(location.search);
+                        var room = params.get('room');
+                        if (room) {
+                            APP.joinRoom(room);
+                        }
+                    }
+                });
+            },
+            
+            // Login
+            login: function() {
+                if (!document.getElementById('lgpdCheck').checked) {
+                    this.showError('Aceite os Termos e LGPD.');
+                    return;
+                }
+                
+                var email = document.getElementById('email').value.trim();
+                var pass = document.getElementById('password').value;
+                
+                if (!email || !pass) {
+                    this.showError('Preencha todos os campos.');
+                    return;
+                }
+                
+                this.showLoading(true);
+                
+                auth.signInWithEmailAndPassword(email, pass)
+                    .then(function(res) {
+                        APP.user = res.user;
+                        
+                        if (document.getElementById('joinRoomCheck').checked && document.getElementById('roomId').value.trim()) {
+                            return APP.joinRoom(document.getElementById('roomId').value.trim());
+                        } else {
+                            return APP.createRoom();
+                        }
+                    })
+                    .catch(function(e) {
+                        APP.showError(APP.translateError(e));
+                    })
+                    .finally(function() {
+                        APP.showLoading(false);
+                    });
+            },
+            
+            // Register
+            register: function() {
+                if (!document.getElementById('lgpdCheck').checked) {
+                    this.showError('Aceite os Termos e LGPD.');
+                    return;
+                }
+                
+                var email = document.getElementById('email').value.trim();
+                var pass = document.getElementById('password').value;
+                
+                if (!email || !pass) {
+                    this.showError('Preencha todos os campos.');
+                    return;
+                }
+                
+                if (pass.length < 6) {
+                    this.showError('Senha: mínimo 6 caracteres.');
+                    return;
+                }
+                
+                this.showLoading(true);
+                
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then(function(res) {
+                        APP.user = res.user;
+                        return APP.createRoom();
+                    })
+                    .catch(function(e) {
+                        APP.showError(APP.translateError(e));
+                    })
+                    .finally(function() {
+                        APP.showLoading(false);
+                    });
+            },
+            
+            // Logout
+            logout: function() {
+                this.showLoading(true);
+                
+                if (this.unsubscribe) {
+                    this.unsubscribe();
+                    this.unsubscribe = null;
+                }
+                
+                if (this.editor) {
+                    this.editor.toTextArea();
+                    this.editor = null;
+                }
+                
+                auth.signOut().then(function() {
+                    APP.user = null;
+                    APP.roomId = null;
+                    APP.isOwner = false;
+                    history.pushState({}, '', location.pathname);
+                    document.getElementById('loginPage').style.display = 'flex';
+                    document.getElementById('editorPage').style.display = 'none';
+                    APP.showLoading(false);
+                });
+            },
+            
+            // Create room
+            createRoom: function() {
+                var self = this;
+                return db.collection('rooms').add({
+                    ownerId: this.user.uid,
+                    ownerEmail: this.user.email,
+                    members: [this.user.uid],
+                    code: templates[this.currentLang],
+                    language: this.currentLang,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(function(doc) {
+                    self.roomId = doc.id;
+                    self.isOwner = true;
+                    history.pushState({}, '', '?room=' + doc.id);
+                    self.showEditor();
+                    self.toast('✅ Sala criada!');
+                }).catch(function(e) {
+                    self.showError('Erro ao criar sala.');
+                });
+            },
+            
+            // Join room
+            joinRoom: function(id) {
+                var self = this;
+                return db.collection('rooms').doc(id).get().then(function(doc) {
+                    if (!doc.exists) {
+                        self.showError('Sala não encontrada.');
+                        return;
+                    }
+                    
+                    var data = doc.data();
+                    
+                    if (!data.members.includes(self.user.uid)) {
+                        return db.collection('rooms').doc(id).update({
+                            members: firebase.firestore.FieldValue.arrayUnion(self.user.uid)
+                        }).then(function() {
+                            return data;
+                        });
+                    }
+                    
+                    return data;
+                }).then(function(data) {
+                    if (!data) return;
+                    
+                    self.roomId = id;
+                    self.isOwner = data.ownerId === self.user.uid;
+                    
+                    if (data.language) {
+                        self.currentLang = data.language;
+                        document.getElementById('langSelect').value = data.language;
+                    }
+                    
+                    history.pushState({}, '', '?room=' + id);
+                    self.showEditor();
+                    self.toast('✅ Entrou na sala!');
+                }).catch(function(e) {
+                    self.showError('Erro ao entrar.');
+                });
+            },
+            
+            // Show editor
+            showEditor: function() {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('editorPage').style.display = 'flex';
+                
+                document.getElementById('roomBadge').textContent = 'Sala: ' + (this.roomId ? this.roomId.substring(0, 10) + '...' : '---');
+                
+                var self = this;
+                
+                // Inicializar CodeMirror (apenas uma vez)
+                if (!this.editor) {
+                    setTimeout(function() {
+                        var textarea = document.getElementById('codeEditor');
+                        
+                        self.editor = CodeMirror.fromTextArea(textarea, {
+                            mode: 'htmlmixed',
+                            theme: 'monokai',
+                            lineNumbers: true,
+                            lineWrapping: true,
+                            autoCloseTags: true,
+                            autoCloseBrackets: true,
+                            indentUnit: 2,
+                            tabSize: 2
+                        });
+                        
+                        self.editor.on('change', function() {
+                            if (self.currentLang === 'html') {
+                                self.updatePreview(self.editor.getValue());
+                            }
+                            if (self.autoSave && self.roomId) {
+                                clearTimeout(self.syncTimer);
+                                self.syncTimer = setTimeout(function() {
+                                    self.syncCode();
+                                }, 500);
+                            }
+                        });
+                        
+                        // Carregar código da sala
+                        if (self.roomId) {
+                            self.listenRoom();
+                        }
+                        
+                        console.log('Editor inicializado!');
+                    }, 300);
+                } else {
+                    // Se já existe, apenas reconectar listener
+                    if (self.roomId) {
+                        self.listenRoom();
+                    }
+                }
+            },
+            
+            // Listen room
+            listenRoom: function() {
+                var self = this;
+                
+                if (this.unsubscribe) {
+                    this.unsubscribe();
+                }
+                
+                this.unsubscribe = db.collection('rooms').doc(this.roomId).onSnapshot(function(doc) {
+                    if (!doc.exists) {
+                        self.logout();
+                        return;
+                    }
+                    
+                    var data = doc.data();
+                    
+                    if (!data.members.includes(self.user.uid)) {
+                        alert('Acesso revogado.');
+                        self.logout();
+                        return;
+                    }
+                    
+                    if (self.editor && data.code !== self.editor.getValue()) {
+                        var cursor = self.editor.getCursor();
+                        self.editor.setValue(data.code || '');
+                        self.editor.setCursor(cursor);
+                    }
+                    
+                    if (data.language && data.language !== self.currentLang) {
+                        self.currentLang = data.language;
+                        document.getElementById('langSelect').value = data.language;
+                        self.changeLanguage(data.language);
+                    }
+                });
+            },
+            
+            // Sync code
+            syncCode: function() {
+                if (!this.roomId || !this.editor) return;
+                
+                db.collection('rooms').doc(this.roomId).update({
+                    code: this.editor.getValue(),
+                    language: this.currentLang
+                }).catch(function() {});
+            },
+            
+            // Change language
+            changeLanguage: function(lang) {
+                this.currentLang = lang;
+                
+                var modes = {
+                    html: 'htmlmixed',
+                    javascript: 'javascript',
+                    python: 'python',
+                    java: 'text/x-java',
+                    cpp: 'text/x-c++src',
+                    csharp: 'text/x-csharp'
+                };
+                
+                if (this.editor) {
+                    this.editor.setOption('mode', modes[lang] || 'javascript');
+                    
+                    if (!this.editor.getValue().trim()) {
+                        this.editor.setValue(templates[lang] || '');
+                    }
+                }
+                
+                if (lang === 'html') {
+                    document.getElementById('previewContainer').style.display = 'block';
+                    document.getElementById('console').style.display = 'none';
+                    if (this.editor) this.updatePreview(this.editor.getValue());
+                } else {
+                    document.getElementById('previewContainer').style.display = 'none';
+                    document.getElementById('console').style.display = 'block';
+                }
+                
+                this.toast('📝 ' + lang.toUpperCase());
+            },
+            
+            // Update preview
+            updatePreview: function(code) {
+                if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+                this.previewUrl = URL.createObjectURL(new Blob([code], { type: 'text/html' }));
+                document.getElementById('previewFrame').src = this.previewUrl;
+            },
+            
+            // Run code
+            runCode: function() {
+                if (!this.editor) {
+                    this.toast('⚠️ Editor não está pronto. Aguarde...');
+                    return;
+                }
+                
+                var code = this.editor.getValue();
+                
+                if (this.currentLang === 'html') {
+                    this.updatePreview(code);
+                    document.getElementById('previewContainer').style.display = 'block';
+                    document.getElementById('console').style.display = 'none';
+                    this.toast('✅ Preview atualizado!');
+                    return;
+                }
+                
+                document.getElementById('console').style.display = 'block';
+                document.getElementById('previewContainer').style.display = 'none';
+                
+                var consoleEl = document.getElementById('console');
+                consoleEl.textContent = '⏳ Executando...\n';
+                
+                if (this.currentLang === 'javascript') {
+                    try {
+                        var output = '';
+                        var oldLog = console.log;
+                        console.log = function() {
+                            for (var i = 0; i < arguments.length; i++) {
+                                output += arguments[i] + ' ';
+                            }
+                            output += '\n';
+                        };
+                        
+                        eval(code);
+                        
+                        console.log = oldLog;
+                        consoleEl.textContent = output || '✅ Código executado!';
+                    } catch (e) {
+                        consoleEl.textContent = '❌ Erro: ' + e.message;
+                    }
+                } else {
+                    consoleEl.textContent = '⚠️ ' + this.currentLang.toUpperCase() + ' precisa de servidor.\n💡 Use HTML ou JavaScript para execução imediata.';
+                }
+            },
+            
+            // Download
+            download: function() {
+                if (!this.editor) return;
+                
+                var exts = { html:'.html', javascript:'.js', python:'.py', java:'.java', cpp:'.cpp', csharp:'.cs' };
+                var code = this.editor.getValue();
+                var blob = new Blob([code], { type: 'text/plain' });
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'projeto' + (exts[this.currentLang] || '.txt');
+                a.click();
+                this.toast('✅ Baixado!');
+            },
+            
+            // Fullscreen
+            fullscreen: function() {
+                if (!this.editor) return;
+                
+                var code = this.editor.getValue();
+                var blob = new Blob([code], { type: 'text/html' });
+                document.getElementById('fullscreenFrame').src = URL.createObjectURL(blob);
+                document.getElementById('fullscreenModal').classList.add('show');
+                this.toast('▶ Preview em tela cheia!');
+            },
+            
+            // Copy link
+            copyLink: function() {
+                if (!this.roomId) return;
+                
+                var url = location.origin + location.pathname + '?room=' + this.roomId;
+                navigator.clipboard.writeText(url).then(function() {
+                    APP.toast('✅ Link copiado!');
+                });
+            },
+            
+            // Show members
+            showMembers: function() {
+                if (!this.roomId) return;
+                
+                var self = this;
+                
+                db.collection('rooms').doc(this.roomId).get().then(function(doc) {
+                    var data = doc.data();
+                    var list = document.getElementById('membersList');
+                    list.innerHTML = '';
+                    
+                    // Owner
+                    var ownerDiv = document.createElement('div');
+                    ownerDiv.style.cssText = 'padding:8px;background:#222;border-radius:4px;margin:4px 0;font-size:12px;';
+                    ownerDiv.innerHTML = '👑 <b>' + data.ownerEmail + '</b> (Dono)';
+                    list.appendChild(ownerDiv);
+                    
+                    // Members
+                    data.members.forEach(function(uid) {
+                        if (uid !== data.ownerId) {
+                            var div = document.createElement('div');
+                            div.style.cssText = 'padding:8px;background:#111;border-radius:4px;margin:4px 0;font-size:12px;display:flex;justify-content:space-between;';
+                            div.innerHTML = '👤 ' + uid.substring(0, 8) + '...' + 
+                                (self.isOwner ? ' <button onclick="APP.removeMember(\'' + uid + '\')" style="background:#a00;color:#fff;border:none;padding:2px 8px;border-radius:3px;cursor:pointer;">Remover</button>' : '');
+                            list.appendChild(div);
+                        }
+                    });
+                    
+                    document.getElementById('membersModal').classList.add('show');
+                });
+            },
+            
+            // Remove member
+            removeMember: function(uid) {
+                if (!confirm('Remover este membro?')) return;
+                
+                var self = this;
+                
+                db.collection('rooms').doc(this.roomId).update({
+                    members: firebase.firestore.FieldValue.arrayRemove(uid)
+                }).then(function() {
+                    self.toast('✅ Removido!');
+                    self.showMembers();
+                });
+            },
+            
+            // Show legal
+            showLegal: function(type) {
+                var title = document.getElementById('legalTitle');
+                var content = document.getElementById('legalContent');
+                
+                if (type === 'terms') {
+                    title.textContent = '📋 Termos de Uso';
+                    content.innerHTML = '<p><b>1.</b> Ao usar o CodeCollab, você concorda com os termos.</p><p style="margin-top:8px;"><b>2.</b> Suporte a múltiplas linguagens de programação.</p><p style="margin-top:8px;"><b>3.</b> Você é responsável pelo código que produz.</p>';
+                } else {
+                    title.textContent = '🔒 LGPD';
+                    content.innerHTML = '<p><b>1.</b> Coletamos apenas email e código para funcionamento do serviço.</p><p style="margin-top:8px;"><b>2.</b> Seus dados são protegidos e não são compartilhados.</p><p style="margin-top:8px;"><b>3.</b> Você tem direito a acessar e excluir seus dados.</p>';
+                }
+                
+                document.getElementById('legalModal').classList.add('show');
+            },
+            
+            // Setup splitter
+            setupSplitter: function() {
+                var splitter = document.getElementById('splitter');
+                var editorPanel = document.getElementById('editorPanel');
+                var outputPanel = document.getElementById('outputPanel');
+                var mainArea = document.getElementById('mainArea');
+                var dragging = false;
+                
+                function isMobile() {
+                    return window.innerWidth < 768;
+                }
+                
+                splitter.onmousedown = function() { dragging = true; };
+                splitter.ontouchstart = function() { dragging = true; };
+                
+                document.onmousemove = function(e) {
+                    if (!dragging) return;
+                    
+                    var rect = mainArea.getBoundingClientRect();
+                    
+                    if (isMobile()) {
+                        var pct = ((e.clientY - rect.top) / rect.height) * 100;
+                        var v = Math.max(20, Math.min(80, pct));
+                        editorPanel.style.flex = 'none';
+                        editorPanel.style.height = v + '%';
+                        outputPanel.style.flex = 'none';
+                        outputPanel.style.height = (100 - v) + '%';
+                    } else {
+                        var pct = ((e.clientX - rect.left) / rect.width) * 100;
+                        var v = Math.max(20, Math.min(80, pct));
+                        editorPanel.style.flex = 'none';
+                        editorPanel.style.width = v + '%';
+                        outputPanel.style.flex = 'none';
+                        outputPanel.style.width = (100 - v) + '%';
+                    }
+                    
+                    if (APP.editor) APP.editor.refresh();
+                };
+                
+                document.ontouchmove = function(e) {
+                    if (!dragging) return;
+                    
+                    var rect = mainArea.getBoundingClientRect();
+                    var pct = ((e.touches[0].clientY - rect.top) / rect.height) * 100;
+                    var v = Math.max(20, Math.min(80, pct));
+                    editorPanel.style.flex = 'none';
+                    editorPanel.style.height = v + '%';
+                    outputPanel.style.flex = 'none';
+                    outputPanel.style.height = (100 - v) + '%';
+                };
+                
+                document.onmouseup = function() { dragging = false; };
+                document.ontouchend = function() { dragging = false; };
+            },
+            
+            // UI Helpers
+            showError: function(msg) {
+                var el = document.getElementById('errorMsg');
+                el.textContent = msg;
+                el.style.display = 'block';
+            },
+            
+            toast: function(msg) {
+                var el = document.createElement('div');
+                el.className = 'toast';
+                el.textContent = msg;
+                document.body.appendChild(el);
+                setTimeout(function() {
+                    el.style.opacity = '0';
+                    el.style.transition = 'opacity 0.3s';
+                    setTimeout(function() { el.remove(); }, 300);
+                }, 2500);
+            },
+            
+            showLoading: function(show) {
+                if (show) {
+                    document.getElementById('loadingOverlay').classList.add('show');
+                } else {
+                    document.getElementById('loadingOverlay').classList.remove('show');
+                }
+            },
+            
+            translateError: function(e) {
+                var map = {
+                    'auth/email-already-in-use': 'Email já cadastrado.',
+                    'auth/invalid-email': 'Email inválido.',
+                    'auth/weak-password': 'Senha muito fraca.',
+                    'auth/user-not-found': 'Usuário não encontrado.',
+                    'auth/wrong-password': 'Senha incorreta.',
+                    'auth/too-many-requests': 'Muitas tentativas.',
+                    'auth/network-request-failed': 'Sem conexão.'
+                };
+                return map[e.code] || 'Erro desconhecido.';
+            }
+        };
+        
+        // Iniciar quando a página carregar
+        window.onload = function() {
+            APP.init();
+            console.log('CodeCollab Pro pronto!');
+        };
+    </script>
+</body>
+</html>
