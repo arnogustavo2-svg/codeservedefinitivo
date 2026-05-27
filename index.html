@@ -2,9 +2,11 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>CodeCollab Pro</title>
     <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -12,366 +14,686 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
     
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;height:100vh;width:100vw;overflow:hidden;position:fixed;top:0;left:0}
-        #loginPage{display:flex;align-items:center;justify-content:center;height:100%;background:#0a0a0a}
-        .login-card{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:24px;width:90%;max-width:400px}
-        .login-card h1{text-align:center;font-size:24px;margin-bottom:16px}
-        .login-card input{width:100%;padding:10px;margin:6px 0;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:6px;font-size:14px}
-        .login-card button{width:100%;padding:12px;margin:8px 0;border:none;border-radius:6px;font-size:14px;font-weight:bold;cursor:pointer}
-        .btn-login{background:#fff;color:#000}
-        .btn-register{background:transparent;border:1px solid #555;color:#fff}
-        .error-msg{background:#400;color:#f66;padding:8px;border-radius:4px;font-size:12px;margin:8px 0;display:none}
-        #editorPage{display:none;height:100%;flex-direction:column}
-        .toolbar{display:flex;padding:8px;background:#1a1a1a;border-bottom:1px solid #333;gap:4px;flex-wrap:wrap;align-items:center}
-        .toolbar button,.toolbar select{padding:6px 10px;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:4px;cursor:pointer;font-size:11px}
-        .toolbar .run-btn{background:#0a5;border-color:#0a5;color:#fff;font-weight:bold}
-        .toolbar .logout-btn{background:#a00;border-color:#a00}
+        html,body{
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+            background:#0a0a0a;color:#e0e0e0;
+            height:100vh;height:100dvh;width:100vw;
+            overflow:hidden;position:fixed;top:0;left:0;
+            -webkit-font-smoothing:antialiased;
+            -webkit-text-size-adjust:100%;
+        }
+        #loginPage{
+            display:flex;align-items:center;justify-content:center;
+            height:100%;width:100%;background:linear-gradient(135deg,#0a0a0a,#1a1a2e);
+            padding:16px;
+        }
+        .login-card{
+            background:#141414;border:1px solid #2a2a2a;border-radius:16px;
+            padding:24px 20px;width:100%;max-width:400px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.5);
+        }
+        .login-card h1{text-align:center;font-size:24px;font-weight:700;color:#fff;margin-bottom:4px}
+        .login-card .sub{text-align:center;font-size:10px;color:#666;margin-bottom:16px;text-transform:uppercase;letter-spacing:2px;font-family:monospace}
+        .input-group{margin-bottom:10px}
+        .input-group label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px}
+        .input-group input{
+            width:100%;padding:10px 12px;background:#1a1a1a;
+            border:1px solid #2a2a2a;border-radius:8px;color:#fff;
+            font-size:16px;outline:none;transition:border-color .2s;
+            -webkit-appearance:none;
+        }
+        .input-group input:focus{border-color:#4a90d9}
+        .checkbox-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:#999}
+        .checkbox-row input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#4a90d9;flex-shrink:0}
+        .btn-row{display:flex;gap:10px;margin-top:16px}
+        .btn{
+            flex:1;padding:12px;border-radius:8px;border:none;
+            font-size:14px;font-weight:600;cursor:pointer;
+            transition:all .15s;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;
+        }
+        .btn:active{transform:scale(.97)}
+        .btn-primary{background:#fff;color:#000}
+        .btn-outline{background:transparent;border:1px solid #333;color:#ccc}
+        .error-msg{
+            background:#2d0000;border:1px solid #5c0000;color:#ff6b6b;
+            padding:10px;border-radius:6px;font-size:12px;text-align:center;
+            margin-top:10px;display:none;font-family:monospace;
+        }
+        #editorPage{display:none;height:100%;width:100%;flex-direction:column}
+        .toolbar{
+            display:flex;align-items:center;justify-content:space-between;
+            padding:6px 8px;background:#141414;border-bottom:1px solid #2a2a2a;
+            flex-shrink:0;flex-wrap:wrap;gap:4px;min-height:44px;
+        }
+        .toolbar-left{display:flex;align-items:center;gap:6px}
+        .toolbar-right{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+        .toolbar-title{font-weight:700;font-size:14px;color:#fff;white-space:nowrap}
+        .room-badge{
+            background:#1a1a1a;border:1px solid #2a2a2a;color:#888;
+            font-family:monospace;font-size:10px;padding:3px 6px;
+            border-radius:4px;cursor:pointer;white-space:nowrap;
+        }
+        .room-badge:active{border-color:#4a90d9}
+        .tbtn{
+            padding:7px 9px;border-radius:4px;border:1px solid #2a2a2a;
+            background:#1a1a1a;color:#ccc;cursor:pointer;font-size:10px;
+            font-family:monospace;transition:all .15s;white-space:nowrap;
+            -webkit-appearance:none;-webkit-tap-highlight-color:transparent;
+            min-height:30px;min-width:30px;
+        }
+        .tbtn:active{background:#333;border-color:#4a90d9}
+        .tbtn.green{background:#0d7a3e;border-color:#10b981;color:#d1fae5}
+        .tbtn.red{background:#7f1d1d;border-color:#ef4444;color:#fecaca}
+        select.tbtn{max-width:100px}
         .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
         @media(min-width:768px){.main-area{flex-direction:row}}
-        .panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:200px}
-        .panel-header{padding:4px 10px;background:#1a1a1a;font-size:11px;color:#888;border-bottom:1px solid #333}
-        .panel-body{flex:1;overflow:hidden}
-        #console{background:#0d0d0d;color:#0f0;font-family:monospace;font-size:12px;padding:10px;height:100%;overflow-y:auto;white-space:pre-wrap}
-        #previewContainer{display:none;height:100%}
+        .panel{display:flex;flex-direction:column;overflow:hidden;min-height:0}
+        .panel-header{
+            padding:4px 8px;background:#1a1a1a;border-bottom:1px solid #2a2a2a;
+            font-size:10px;color:#666;font-family:monospace;flex-shrink:0;
+            user-select:none;-webkit-user-select:none;
+        }
+        .panel-body{flex:1;overflow:hidden;position:relative}
+        #console{
+            background:#0d0d0d;color:#0f0;font-family:monospace;
+            font-size:11px;padding:10px;height:100%;overflow-y:auto;
+            -webkit-overflow-scrolling:touch;white-space:pre-wrap;
+        }
+        #console.error{color:#f44}
+        #console.warn{color:#fa0}
+        #previewContainer{
+            display:none;height:100%;width:100%;
+            position:absolute;top:0;left:0;background:#fff;
+        }
         #previewFrame{width:100%;height:100%;border:none;background:#fff}
-        .splitter{width:100%;height:4px;background:#333;cursor:row-resize}
-        @media(min-width:768px){.splitter{width:4px;height:auto;cursor:col-resize}}
-        .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center}
+        .splitter{
+            width:100%;height:6px;background:#2a2a2a;cursor:row-resize;
+            flex-shrink:0;transition:background .2s;touch-action:none;
+            min-height:6px;
+        }
+        .splitter:active{background:#4a90d9}
+        @media(min-width:768px){.splitter{width:6px;height:auto;cursor:col-resize;min-height:0;min-width:6px}}
+        .modal{
+            display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+            z-index:100;align-items:center;justify-content:center;padding:16px;
+        }
         .modal.show{display:flex}
-        .modal-content{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;width:90%;max-width:400px;max-height:80vh;overflow-y:auto}
-        .modal-content h3{margin-bottom:12px;font-size:18px}
-        .modal-content button{width:100%;padding:10px;margin-top:10px;background:#333;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px}
-        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;color:#000;padding:10px 20px;border-radius:20px;font-size:13px;font-family:monospace;z-index:200}
-        .loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;align-items:center;justify-content:center}
+        .modal-content{
+            background:#141414;border:1px solid #2a2a2a;border-radius:12px;
+            padding:20px;width:100%;max-width:400px;max-height:80vh;
+            overflow-y:auto;-webkit-overflow-scrolling:touch;
+        }
+        .modal-content h3{color:#fff;font-size:16px;margin-bottom:10px}
+        .modal-content button{
+            width:100%;padding:10px;margin-top:8px;background:#2a2a2a;
+            color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;
+            -webkit-appearance:none;min-height:44px;
+        }
+        .toast{
+            position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+            background:#fff;color:#000;padding:10px 18px;border-radius:20px;
+            font-size:12px;font-family:monospace;z-index:200;
+            white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.5);
+            animation:toastIn .3s ease;pointer-events:none;
+        }
+        @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        .loading{
+            display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+            z-index:300;align-items:center;justify-content:center;
+        }
         .loading.show{display:flex}
-        .spinner{width:36px;height:36px;border:3px solid #333;border-top:3px solid #ccc;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+        .spinner{
+            width:36px;height:36px;border:3px solid #2a2a2a;
+            border-top:3px solid #ccc;border-radius:50%;
+            animation:spin .8s linear infinite;margin:0 auto 12px;
+        }
         @keyframes spin{to{transform:rotate(360deg)}}
-        .checkbox-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:#999}
-        .checkbox-row input[type="checkbox"]{width:18px;height:18px;cursor:pointer}
         .link{color:#4af;text-decoration:underline;cursor:pointer}
-        .CodeMirror{height:100%!important;font-size:14px}
+        .CodeMirror{height:100%!important;font-size:13px}
+        @media(min-width:768px){.CodeMirror{font-size:14px}}
         textarea#codeEditor{display:none}
     </style>
 </head>
 <body>
 
-    <div id="loginPage">
-        <div class="login-card">
-            <h1>🚀 CodeCollab Pro</h1>
-            <p style="text-align:center;color:#888;font-size:11px;margin-bottom:16px;">HTML, JavaScript, Python e mais</p>
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Senha">
-            <div id="roomGroup" style="display:none"><input type="text" id="roomId" placeholder="ID da Sala"></div>
-            <div class="checkbox-row"><input type="checkbox" id="joinRoomCheck"><span>Entrar em sala existente</span></div>
-            <div class="checkbox-row"><input type="checkbox" id="lgpdCheck"><span>Aceito os <span class="link" id="termsLink">Termos</span> e <span class="link" id="lgpdLink">LGPD</span></span></div>
-            <div class="error-msg" id="errorMsg"></div>
-            <button class="btn-login" id="loginBtn">Entrar</button>
-            <button class="btn-register" id="registerBtn">Criar Conta</button>
+<div id="loginPage">
+    <div class="login-card">
+        <div class="sub">Multi-Language IDE</div>
+        <h1>🚀 CodeCollab Pro</h1>
+        <p style="text-align:center;color:#666;font-size:11px;margin-bottom:14px">HTML, JavaScript, Python</p>
+        <div class="input-group"><label>Email</label><input type="email" id="email" placeholder="seu@email.com" autocomplete="email" inputmode="email"></div>
+        <div class="input-group"><label>Senha</label><input type="password" id="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password"></div>
+        <div class="input-group" id="roomGroup" style="display:none"><label>ID da Sala</label><input type="text" id="roomId" placeholder="Deixe vazio para criar nova"></div>
+        <div class="checkbox-row"><input type="checkbox" id="joinRoomCheck"><span>Entrar em sala existente</span></div>
+        <div class="checkbox-row"><input type="checkbox" id="lgpdCheck"><span>Aceito os <span class="link" id="termsLink">Termos</span> e <span class="link" id="lgpdLink">LGPD</span></span></div>
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="loginBtn">Entrar</button>
+            <button class="btn btn-outline" id="registerBtn">Criar Conta</button>
         </div>
     </div>
+</div>
 
-    <div id="editorPage">
-        <div class="toolbar">
-            <span style="font-weight:bold;color:#fff">🚀 CodeCollab</span>
-            <span id="roomBadge" style="font-size:10px;color:#888;cursor:pointer">Sala: ---</span>
-            <select id="langSelect"><option value="html">HTML</option><option value="javascript">JavaScript</option><option value="python">Python</option></select>
-            <button class="run-btn" id="runBtn">▶ Run</button>
-            <button id="downloadBtn">⬇ Baixar</button>
-            <button id="fullscreenBtn">⛶ Tela Cheia</button>
-            <button id="configBtn">⚙️</button>
-            <button id="membersBtn">👥</button>
-            <button class="logout-btn" id="logoutBtn">Sair</button>
+<div id="editorPage">
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <span class="toolbar-title">🚀 CodeCollab</span>
+            <span class="room-badge" id="roomBadge">Sala: ---</span>
         </div>
-        <div class="main-area" id="mainArea">
-            <div class="panel" id="editorPanel"><div class="panel-header">📝 Editor</div><div class="panel-body"><textarea id="codeEditor"></textarea></div></div>
-            <div class="splitter" id="splitter"></div>
-            <div class="panel" id="outputPanel"><div class="panel-header">💻 Console / Preview</div><div class="panel-body"><div id="console">// ▶ Run ou Ctrl+Enter</div><div id="previewContainer"><iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe></div></div></div>
+        <div class="toolbar-right">
+            <select id="langSelect" class="tbtn"><option value="html">HTML</option><option value="javascript">JS</option><option value="python">Python</option></select>
+            <button class="tbtn green" id="runBtn">▶ Run</button>
+            <button class="tbtn" id="downloadBtn">⬇</button>
+            <button class="tbtn" id="fullscreenBtn">⛶</button>
+            <button class="tbtn" id="configBtn">⚙️</button>
+            <button class="tbtn" id="membersBtn">👥</button>
+            <button class="tbtn red" id="logoutBtn">Sair</button>
         </div>
     </div>
+    <div class="main-area" id="mainArea">
+        <div class="panel" id="editorPanel">
+            <div class="panel-header">📝 Editor</div>
+            <div class="panel-body"><textarea id="codeEditor"></textarea></div>
+        </div>
+        <div class="splitter" id="splitter"></div>
+        <div class="panel" id="outputPanel">
+            <div class="panel-header">💻 Console / Preview</div>
+            <div class="panel-body">
+                <div id="console">// ▶ Run ou Ctrl+Enter para executar</div>
+                <div id="previewContainer"><iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <div class="modal" id="configModal"><div class="modal-content"><h3>⚙️ Config</h3><select id="themeSelect" style="width:100%;padding:8px;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:4px;margin:8px 0"><option value="monokai">Monokai</option><option value="eclipse">Eclipse</option></select><label>Fonte: <span id="fontSizeVal">14px</span></label><input type="range" id="fontSizeSlider" min="10" max="24" value="14" style="width:100%;margin:8px 0"><div class="checkbox-row"><input type="checkbox" id="autosaveCheck" checked><span>Auto-save</span></div><button id="closeConfigBtn">Fechar</button></div></div>
-    <div class="modal" id="membersModal"><div class="modal-content"><h3>👥 Membros</h3><div id="membersList"></div><button id="closeMembersBtn">Fechar</button></div></div>
-    <div class="modal" id="legalModal"><div class="modal-content"><h3 id="legalTitle"></h3><div id="legalContent" style="font-size:13px;color:#999;line-height:1.6"></div><button id="closeLegalBtn">Fechar</button></div></div>
-    <div class="modal" id="fullscreenModal"><div style="position:fixed;inset:0;background:#000;z-index:150;display:flex;flex-direction:column"><div style="padding:8px;background:#1a1a1a;display:flex;justify-content:space-between"><span style="color:#888">▶ Preview</span><button id="closeFullscreenBtn" style="background:#a00;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer">✕ Fechar</button></div><iframe id="fullscreenFrame" sandbox="allow-scripts allow-same-origin" style="flex:1;border:none;background:#fff"></iframe></div></div>
-    <div class="loading" id="loadingOverlay"><div style="text-align:center"><div class="spinner"></div><span style="color:#ccc">Carregando...</span></div></div>
+<div class="modal" id="configModal"><div class="modal-content"><h3>⚙️ Configurações</h3><div class="input-group"><label>Tema</label><select id="themeSelect" style="width:100%;padding:8px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;border-radius:4px"><option value="monokai">Monokai</option><option value="eclipse">Eclipse</option></select></div><div class="input-group"><label>Fonte: <span id="fontSizeVal">14px</span></label><input type="range" id="fontSizeSlider" min="10" max="24" value="14" style="width:100%"></div><div class="checkbox-row"><input type="checkbox" id="autosaveCheck" checked><span>Auto-save</span></div><button id="closeConfigBtn">Fechar</button></div></div>
+<div class="modal" id="membersModal"><div class="modal-content"><h3>👥 Membros</h3><div id="membersList" style="margin:8px 0"></div><button id="closeMembersBtn">Fechar</button></div></div>
+<div class="modal" id="legalModal"><div class="modal-content"><h3 id="legalTitle"></h3><div id="legalContent" style="font-size:13px;color:#999;line-height:1.6"></div><button id="closeLegalBtn">Fechar</button></div></div>
+<div class="modal" id="fullscreenModal"><div style="position:fixed;inset:0;background:#000;z-index:150;display:flex;flex-direction:column"><div style="padding:8px 12px;background:#1a1a1a;display:flex;justify-content:space-between;align-items:center;flex-shrink:0"><span style="color:#888;font-size:12px">▶ Preview</span><button id="closeFullscreenBtn" style="background:#a00;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;font-size:13px;min-height:36px">✕ Fechar</button></div><iframe id="fullscreenFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups" style="flex:1;border:none;background:#fff"></iframe></div></div>
+<div class="loading" id="loadingOverlay"><div style="text-align:center"><div class="spinner"></div><span style="color:#ccc;font-size:13px">Carregando...</span></div></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
 
-    <script>
-        firebase.initializeApp({
-            apiKey: "AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",
-            authDomain: "codeverse-14794.firebaseapp.com",
-            projectId: "codeverse-14794",
-            storageBucket: "codeverse-14794.firebasestorage.app",
-            messagingSenderId: "307083349125",
-            appId: "1:307083349125:web:11b96a4c3fd856d6236dec"
+<script>
+(function(){
+'use strict';
+
+// ==================== FIREBASE ====================
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp({
+        apiKey: "AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",
+        authDomain: "codeverse-14794.firebaseapp.com",
+        projectId: "codeverse-14794",
+        storageBucket: "codeverse-14794.firebasestorage.app",
+        messagingSenderId: "307083349125",
+        appId: "1:307083349125:web:11b96a4c3fd856d6236dec"
+    });
+}
+
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+// ==================== TEMPLATES ====================
+var TMPL = {
+    html: '<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <style>\n    body{font-family:sans-serif;padding:20px;background:#f5f5f5}h1{color:#333}button{padding:10px 20px;background:#4a90d9;color:#fff;border:none;border-radius:6px;cursor:pointer}\n  </style>\n</head>\n<body>\n  <h1>🚀 Olá Mundo!</h1>\n  <p>Seu código HTML aqui.</p>\n  <button onclick="alert(\'Funcionando!\')">Testar</button>\n</body>\n</html>',
+    javascript: '// JavaScript\nconsole.log("Hello, World!");\n\nvar nome = "Dev";\nconsole.log("Bem-vindo, " + nome + "!");\n',
+    python: '# Python 3\nprint("Hello, World!")\n\nnome = "Dev"\nprint(f"Bem-vindo, {nome}!")\n'
+};
+
+// ==================== APP ====================
+var APP = {
+    user: null, roomId: null, isOwner: false, editor: null,
+    currentLang: 'html', fontSize: 14, autoSave: true,
+    unsubscribe: null, previewUrl: null, syncTimer: null,
+
+    init: function() {
+        var s = this;
+        
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('editorPage').style.display = 'none';
+
+        // Bind all buttons
+        document.getElementById('loginBtn').onclick = function(){ s.login(); };
+        document.getElementById('registerBtn').onclick = function(){ s.register(); };
+        document.getElementById('logoutBtn').onclick = function(){ s.logout(); };
+        document.getElementById('runBtn').onclick = function(){ s.runCode(); };
+        document.getElementById('downloadBtn').onclick = function(){ s.download(); };
+        document.getElementById('fullscreenBtn').onclick = function(){ s.fullscreen(); };
+        document.getElementById('configBtn').onclick = function(){ document.getElementById('configModal').classList.add('show'); };
+        document.getElementById('membersBtn').onclick = function(){ s.showMembers(); };
+        document.getElementById('roomBadge').onclick = function(){ s.copyLink(); };
+        document.getElementById('closeConfigBtn').onclick = function(){ document.getElementById('configModal').classList.remove('show'); };
+        document.getElementById('closeMembersBtn').onclick = function(){ document.getElementById('membersModal').classList.remove('show'); };
+        document.getElementById('closeLegalBtn').onclick = function(){ document.getElementById('legalModal').classList.remove('show'); };
+        document.getElementById('closeFullscreenBtn').onclick = function(){ document.getElementById('fullscreenModal').classList.remove('show'); };
+        document.getElementById('termsLink').onclick = function(){ s.showLegal('terms'); };
+        document.getElementById('lgpdLink').onclick = function(){ s.showLegal('lgpd'); };
+        document.getElementById('joinRoomCheck').onchange = function(){ document.getElementById('roomGroup').style.display = this.checked ? 'block' : 'none'; };
+        document.getElementById('langSelect').onchange = function(){ s.changeLanguage(this.value); };
+        document.getElementById('themeSelect').onchange = function(){ if (s.editor) s.editor.setOption('theme', this.value); };
+        document.getElementById('fontSizeSlider').oninput = function(){
+            s.fontSize = parseInt(this.value);
+            document.getElementById('fontSizeVal').textContent = s.fontSize + 'px';
+            if (s.editor) { s.editor.getWrapperElement().style.fontSize = s.fontSize + 'px'; s.editor.refresh(); }
+        };
+        document.getElementById('autosaveCheck').onchange = function(){ s.autoSave = this.checked; };
+
+        // Close modals on outside click
+        document.querySelectorAll('.modal').forEach(function(m){
+            m.onclick = function(e){ if (e.target === m) m.classList.remove('show'); };
         });
-        
-        var auth = firebase.auth();
-        var db = firebase.firestore();
-        
-        var TMPL = {
-            html: '<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"><style>body{font-family:sans-serif;padding:20px;background:#f5f5f5}h1{color:#333}</style></head>\n<body><h1>🚀 Olá!</h1><p>Seu código aqui.</p></body>\n</html>',
-            javascript: '// JavaScript\nconsole.log("Hello!");\n',
-            python: '# Python\nprint("Hello!")\n'
+
+        // Keyboard shortcuts
+        document.onkeydown = function(e){
+            if (e.key === 'Escape') document.querySelectorAll('.modal.show').forEach(function(m){ m.classList.remove('show'); });
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); s.runCode(); }
         };
-        
-        var APP = {
-            user: null, roomId: null, isOwner: false, editor: null,
-            currentLang: 'html', fontSize: 14, autoSave: true,
-            unsubscribe: null, previewUrl: null, syncTimer: null,
-            
-            init: function() {
-                document.getElementById('loginPage').style.display = 'flex';
-                document.getElementById('editorPage').style.display = 'none';
+
+        // Splitter
+        this.setupSplitter();
+
+        // Auth state
+        auth.onAuthStateChanged(function(user){
+            if (user) {
+                s.user = user;
+                var p = new URLSearchParams(location.search);
+                var r = p.get('room');
+                if (r) s.joinRoom(r);
+            }
+        });
+
+        // Safety timeout for loading
+        setTimeout(function(){
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }, 10000);
+    },
+
+    login: function(){
+        if (!document.getElementById('lgpdCheck').checked) { this.showError('Aceite os Termos e LGPD.'); return; }
+        var email = document.getElementById('email').value.trim();
+        var pass = document.getElementById('password').value;
+        if (!email || !pass) { this.showError('Preencha os campos.'); return; }
+        this.showLoading(true);
+        var s = this;
+        auth.signInWithEmailAndPassword(email, pass)
+            .then(function(r){
+                s.user = r.user;
+                var jc = document.getElementById('joinRoomCheck').checked;
+                var rv = document.getElementById('roomId').value.trim();
+                if (jc && rv) return s.joinRoom(rv);
+                return s.createRoom();
+            })
+            .catch(function(e){ s.showError(s.translateError(e)); })
+            .finally(function(){ s.showLoading(false); });
+    },
+
+    register: function(){
+        if (!document.getElementById('lgpdCheck').checked) { this.showError('Aceite os Termos e LGPD.'); return; }
+        var email = document.getElementById('email').value.trim();
+        var pass = document.getElementById('password').value;
+        if (!email || !pass) { this.showError('Preencha os campos.'); return; }
+        if (pass.length < 6) { this.showError('Senha: mínimo 6 caracteres.'); return; }
+        this.showLoading(true);
+        var s = this;
+        auth.createUserWithEmailAndPassword(email, pass)
+            .then(function(r){ s.user = r.user; return s.createRoom(); })
+            .catch(function(e){ s.showError(s.translateError(e)); })
+            .finally(function(){ s.showLoading(false); });
+    },
+
+    logout: function(){
+        this.showLoading(true);
+        var s = this;
+        if (this.unsubscribe) { this.unsubscribe(); this.unsubscribe = null; }
+        if (this.editor) { this.editor.toTextArea(); this.editor = null; }
+        if (this.previewUrl) { URL.revokeObjectURL(this.previewUrl); this.previewUrl = null; }
+        auth.signOut().then(function(){
+            s.user = null; s.roomId = null; s.isOwner = false;
+            history.pushState({}, '', location.pathname);
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('editorPage').style.display = 'none';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            s.showLoading(false);
+        });
+    },
+
+    createRoom: function(){
+        var s = this;
+        return db.collection('rooms').add({
+            ownerId: this.user.uid,
+            ownerEmail: this.user.email,
+            members: [this.user.uid],
+            memberEmails: {},
+            code: TMPL[this.currentLang] || '',
+            language: this.currentLang,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function(doc){
+            s.roomId = doc.id; s.isOwner = true;
+            history.pushState({}, '', '?room=' + doc.id);
+            s.showEditor(); s.toast('Sala criada!');
+        }).catch(function(){ s.showError('Erro ao criar sala.'); });
+    },
+
+    joinRoom: function(id){
+        var s = this;
+        return db.collection('rooms').doc(id).get().then(function(doc){
+            if (!doc.exists) { s.showError('Sala nao encontrada.'); throw new Error('nf'); }
+            var d = doc.data();
+            if (!d.members.includes(s.user.uid)) {
+                var u = { members: firebase.firestore.FieldValue.arrayUnion(s.user.uid) };
+                u['memberEmails.' + s.user.uid] = s.user.email;
+                return db.collection('rooms').doc(id).update(u).then(function(){ return d; });
+            }
+            return d;
+        }).then(function(d){
+            if (!d) return;
+            s.roomId = id; s.isOwner = d.ownerId === s.user.uid;
+            if (d.language) { s.currentLang = d.language; document.getElementById('langSelect').value = d.language; }
+            history.pushState({}, '', '?room=' + id);
+            s.showEditor(); s.toast('Entrou na sala!');
+        }).catch(function(e){ if (e.message !== 'nf') s.showError('Erro.'); });
+    },
+
+    showEditor: function(){
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('editorPage').style.display = 'flex';
+        document.getElementById('roomBadge').textContent = 'Sala: ' + (this.roomId ? this.roomId.substring(0, 10) + '...' : '---');
+
+        var s = this;
+
+        if (!this.editor) {
+            // Usar requestAnimationFrame para garantir DOM pronto
+            var initEditor = function(){
+                if (s.editor) return;
+                var ta = document.getElementById('codeEditor');
+                if (!ta) { requestAnimationFrame(initEditor); return; }
                 
-                var s = this;
-                
-                document.getElementById('loginBtn').onclick = function() { s.login(); };
-                document.getElementById('registerBtn').onclick = function() { s.register(); };
-                document.getElementById('logoutBtn').onclick = function() { s.logout(); };
-                document.getElementById('runBtn').onclick = function() { s.runCode(); };
-                document.getElementById('downloadBtn').onclick = function() { s.download(); };
-                document.getElementById('fullscreenBtn').onclick = function() { s.fullscreen(); };
-                document.getElementById('configBtn').onclick = function() { document.getElementById('configModal').classList.add('show'); };
-                document.getElementById('membersBtn').onclick = function() { s.showMembers(); };
-                document.getElementById('roomBadge').onclick = function() { s.copyLink(); };
-                document.getElementById('closeConfigBtn').onclick = function() { document.getElementById('configModal').classList.remove('show'); };
-                document.getElementById('closeMembersBtn').onclick = function() { document.getElementById('membersModal').classList.remove('show'); };
-                document.getElementById('closeLegalBtn').onclick = function() { document.getElementById('legalModal').classList.remove('show'); };
-                document.getElementById('closeFullscreenBtn').onclick = function() { document.getElementById('fullscreenModal').classList.remove('show'); };
-                document.getElementById('termsLink').onclick = function() { s.showLegal('terms'); };
-                document.getElementById('lgpdLink').onclick = function() { s.showLegal('lgpd'); };
-                document.getElementById('joinRoomCheck').onchange = function() { document.getElementById('roomGroup').style.display = this.checked ? 'block' : 'none'; };
-                document.getElementById('langSelect').onchange = function() { s.changeLanguage(this.value); };
-                document.getElementById('themeSelect').onchange = function() { if (s.editor) s.editor.setOption('theme', this.value); };
-                document.getElementById('fontSizeSlider').oninput = function() {
-                    s.fontSize = parseInt(this.value);
-                    document.getElementById('fontSizeVal').textContent = s.fontSize + 'px';
-                    if (s.editor) { s.editor.getWrapperElement().style.fontSize = s.fontSize + 'px'; s.editor.refresh(); }
-                };
-                document.getElementById('autosaveCheck').onchange = function() { s.autoSave = this.checked; };
-                
-                document.querySelectorAll('.modal').forEach(function(m) { m.onclick = function(e) { if (e.target === m) m.classList.remove('show'); }; });
-                
-                document.onkeydown = function(e) {
-                    if (e.key === 'Escape') document.querySelectorAll('.modal.show').forEach(function(m) { m.classList.remove('show'); });
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); s.runCode(); }
-                };
-                
-                this.setupSplitter();
-                
-                auth.onAuthStateChanged(function(user) {
-                    if (user) { s.user = user; var p = new URLSearchParams(location.search); var r = p.get('room'); if (r) s.joinRoom(r); }
+                s.editor = CodeMirror.fromTextArea(ta, {
+                    mode: 'htmlmixed', theme: 'monokai', lineNumbers: true,
+                    lineWrapping: true, autoCloseTags: true, autoCloseBrackets: true,
+                    indentUnit: 2, tabSize: 2
                 });
-            },
-            
-            login: function() {
-                if (!document.getElementById('lgpdCheck').checked) { this.showError('Aceite os Termos e LGPD.'); return; }
-                var email = document.getElementById('email').value.trim();
-                var pass = document.getElementById('password').value;
-                if (!email || !pass) { this.showError('Preencha os campos.'); return; }
-                this.showLoading(true);
-                var s = this;
-                auth.signInWithEmailAndPassword(email, pass).then(function(r) {
-                    s.user = r.user;
-                    if (document.getElementById('joinRoomCheck').checked && document.getElementById('roomId').value.trim()) return s.joinRoom(document.getElementById('roomId').value.trim());
-                    return s.createRoom();
-                }).catch(function(e) { s.showError(s.translateError(e)); }).finally(function() { s.showLoading(false); });
-            },
-            
-            register: function() {
-                if (!document.getElementById('lgpdCheck').checked) { this.showError('Aceite os Termos e LGPD.'); return; }
-                var email = document.getElementById('email').value.trim();
-                var pass = document.getElementById('password').value;
-                if (!email || !pass) { this.showError('Preencha os campos.'); return; }
-                if (pass.length < 6) { this.showError('Senha: mínimo 6.'); return; }
-                this.showLoading(true);
-                var s = this;
-                auth.createUserWithEmailAndPassword(email, pass).then(function(r) { s.user = r.user; return s.createRoom(); }).catch(function(e) { s.showError(s.translateError(e)); }).finally(function() { s.showLoading(false); });
-            },
-            
-            logout: function() {
-                this.showLoading(true);
-                var s = this;
-                if (this.unsubscribe) { this.unsubscribe(); this.unsubscribe = null; }
-                if (this.editor) { this.editor.toTextArea(); this.editor = null; }
-                if (this.previewUrl) { URL.revokeObjectURL(this.previewUrl); this.previewUrl = null; }
-                auth.signOut().then(function() {
-                    s.user = null; s.roomId = null; s.isOwner = false;
-                    history.pushState({}, '', location.pathname);
-                    document.getElementById('loginPage').style.display = 'flex';
-                    document.getElementById('editorPage').style.display = 'none';
-                    s.showLoading(false);
-                });
-            },
-            
-            createRoom: function() {
-                var s = this;
-                return db.collection('rooms').add({
-                    ownerId: this.user.uid, ownerEmail: this.user.email,
-                    members: [this.user.uid], memberEmails: {},
-                    code: TMPL[this.currentLang] || '', language: this.currentLang,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(function(doc) {
-                    s.roomId = doc.id; s.isOwner = true;
-                    history.pushState({}, '', '?room=' + doc.id);
-                    s.showEditor(); s.toast('✅ Sala criada!');
-                }).catch(function() { s.showError('Erro ao criar sala.'); });
-            },
-            
-            joinRoom: function(id) {
-                var s = this;
-                return db.collection('rooms').doc(id).get().then(function(doc) {
-                    if (!doc.exists) { s.showError('Não encontrada.'); throw new Error('nf'); }
-                    var d = doc.data();
-                    if (!d.members.includes(s.user.uid)) {
-                        var u = { members: firebase.firestore.FieldValue.arrayUnion(s.user.uid) };
-                        u['memberEmails.' + s.user.uid] = s.user.email;
-                        return db.collection('rooms').doc(id).update(u).then(function() { return d; });
+                
+                s.editor.on('change', function(){
+                    if (s.currentLang === 'html') s.updatePreview(s.editor.getValue());
+                    if (s.autoSave && s.roomId) {
+                        clearTimeout(s.syncTimer);
+                        s.syncTimer = setTimeout(function(){ s.syncCode(); }, 600);
                     }
-                    return d;
-                }).then(function(d) {
-                    if (!d) return;
-                    s.roomId = id; s.isOwner = d.ownerId === s.user.uid;
-                    if (d.language) { s.currentLang = d.language; document.getElementById('langSelect').value = d.language; }
-                    history.pushState({}, '', '?room=' + id);
-                    s.showEditor(); s.toast('✅ Entrou!');
-                }).catch(function(e) { if (e.message !== 'nf') s.showError('Erro.'); });
-            },
-            
-            showEditor: function() {
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('editorPage').style.display = 'flex';
-                document.getElementById('roomBadge').textContent = 'Sala: ' + (this.roomId ? this.roomId.substring(0, 10) + '...' : '---');
-                var s = this;
-                if (!this.editor) {
-                    setTimeout(function() {
-                        s.editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
-                            mode: 'htmlmixed', theme: 'monokai', lineNumbers: true,
-                            lineWrapping: true, autoCloseTags: true, autoCloseBrackets: true,
-                            indentUnit: 2, tabSize: 2
-                        });
-                        s.editor.on('change', function() {
-                            if (s.currentLang === 'html') s.updatePreview(s.editor.getValue());
-                            if (s.autoSave && s.roomId) { clearTimeout(s.syncTimer); s.syncTimer = setTimeout(function() { s.syncCode(); }, 500); }
-                        });
-                        s.editor.getWrapperElement().style.fontSize = s.fontSize + 'px';
-                        if (s.roomId) s.listenRoom();
-                    }, 200);
-                } else { if (s.roomId) s.listenRoom(); }
-            },
-            
-            listenRoom: function() {
-                var s = this;
-                if (this.unsubscribe) this.unsubscribe();
-                this.unsubscribe = db.collection('rooms').doc(this.roomId).onSnapshot(function(doc) {
-                    if (!doc.exists) { s.logout(); return; }
-                    var d = doc.data();
-                    if (!d.members.includes(s.user.uid)) { alert('Removido.'); s.logout(); return; }
-                    if (s.editor && d.code !== s.editor.getValue()) { var c = s.editor.getCursor(); s.editor.setValue(d.code || ''); s.editor.setCursor(c); }
-                    if (d.language && d.language !== s.currentLang) { s.currentLang = d.language; document.getElementById('langSelect').value = d.language; s.changeLanguage(d.language); }
                 });
-            },
+                
+                s.editor.getWrapperElement().style.fontSize = s.fontSize + 'px';
+                if (s.roomId) s.listenRoom();
+            };
             
-            syncCode: function() { if (!this.roomId || !this.editor) return; db.collection('rooms').doc(this.roomId).update({ code: this.editor.getValue(), language: this.currentLang }).catch(function() {}); },
-            
-            changeLanguage: function(lang) {
-                this.currentLang = lang;
-                var m = { html:'htmlmixed', javascript:'javascript', python:'python' };
-                if (this.editor) { this.editor.setOption('mode', m[lang] || 'javascript'); if (!this.editor.getValue().trim()) this.editor.setValue(TMPL[lang] || ''); }
-                if (lang === 'html') { document.getElementById('previewContainer').style.display = 'block'; document.getElementById('console').style.display = 'none'; if (this.editor) this.updatePreview(this.editor.getValue()); }
-                else { document.getElementById('previewContainer').style.display = 'none'; document.getElementById('console').style.display = 'block'; }
-                this.toast('📝 ' + lang);
-            },
-            
-            updatePreview: function(code) { if (this.previewUrl) URL.revokeObjectURL(this.previewUrl); this.previewUrl = URL.createObjectURL(new Blob([code], { type: 'text/html' })); document.getElementById('previewFrame').src = this.previewUrl; },
-            
-            runCode: function() {
-                if (!this.editor) { this.toast('⚠️ Aguarde...'); return; }
-                var code = this.editor.getValue();
-                if (this.currentLang === 'html') { this.updatePreview(code); document.getElementById('previewContainer').style.display = 'block'; document.getElementById('console').style.display = 'none'; return; }
-                document.getElementById('console').style.display = 'block'; document.getElementById('previewContainer').style.display = 'none';
-                var c = document.getElementById('console'); c.className = ''; c.textContent = '⏳ Executando...\n';
-                if (this.currentLang === 'javascript') {
-                    try { var out = ''; var ol = console.log; console.log = function() { for (var i=0; i<arguments.length; i++) out += arguments[i] + ' '; out += '\n'; }; eval(code); console.log = ol; c.textContent = out || '✅ OK'; }
-                    catch(e) { c.textContent = '❌ ' + e.message; c.className = 'error'; }
-                } else { c.textContent = '⚠️ Use HTML ou JS.'; c.className = 'warn'; }
-            },
-            
-            download: function() {
-                if (!this.editor) return;
-                var e = { html:'.html', javascript:'.js', python:'.py' };
-                var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([this.editor.getValue()], { type:'text/plain' })); a.download = 'projeto' + (e[this.currentLang] || '.txt'); a.click(); this.toast('✅ Baixado!');
-            },
-            
-            fullscreen: function() { if (!this.editor) return; var b = new Blob([this.editor.getValue()], { type:'text/html' }); document.getElementById('fullscreenFrame').src = URL.createObjectURL(b); document.getElementById('fullscreenModal').classList.add('show'); },
-            
-            copyLink: function() {
-                if (!this.roomId) return;
-                var url = location.origin + location.pathname + '?room=' + this.roomId;
-                if (navigator.clipboard) { navigator.clipboard.writeText(url).then(function() { APP.toast('✅ Copiado!'); }); }
-                else { var t = document.createElement('textarea'); t.value = url; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); APP.toast('✅ Copiado!'); }
-            },
-            
-            showMembers: function() {
-                if (!this.roomId) return;
-                var s = this;
-                db.collection('rooms').doc(this.roomId).get().then(function(doc) {
-                    var d = doc.data(), list = document.getElementById('membersList'); list.innerHTML = '';
-                    var od = document.createElement('div'); od.style.cssText = 'padding:8px;background:#222;border-radius:4px;margin:4px 0;font-size:12px'; od.innerHTML = '👑 <b>' + d.ownerEmail + '</b> (Dono)'; list.appendChild(od);
-                    var me = d.memberEmails || {};
-                    d.members.forEach(function(uid) {
-                        if (uid !== d.ownerId) { var dd = document.createElement('div'); dd.style.cssText = 'padding:8px;background:#111;border-radius:4px;margin:4px 0;font-size:12px;display:flex;justify-content:space-between'; dd.innerHTML = '<span>👤 ' + (me[uid] || uid.substring(0,8)+'...') + '</span>' + (s.isOwner ? '<button onclick="APP.removeMember(\''+uid+'\')" style="background:#a00;color:#fff;border:none;padding:2px 8px;border-radius:3px;cursor:pointer">Remover</button>' : ''); list.appendChild(dd); }
-                    });
-                    document.getElementById('membersModal').classList.add('show');
-                });
-            },
-            
-            removeMember: function(uid) {
-                if (!this.isOwner || !confirm('Remover?')) return;
-                var s = this, u = { members: firebase.firestore.FieldValue.arrayRemove(uid) };
-                u['memberEmails.' + uid] = firebase.firestore.FieldValue.delete();
-                db.collection('rooms').doc(this.roomId).update(u).then(function() { s.toast('✅ Removido!'); s.showMembers(); });
-            },
-            
-            showLegal: function(type) {
-                var t = document.getElementById('legalTitle'), c = document.getElementById('legalContent');
-                if (type === 'terms') { t.textContent = '📋 Termos'; c.innerHTML = '<p><b style="color:#fff">1.</b> Ao usar, concorda.</p><p style="margin-top:8px"><b style="color:#fff">2.</b> Suporte multilinguagem.</p>'; }
-                else { t.textContent = '🔒 LGPD'; c.innerHTML = '<p><b style="color:#fff">1.</b> Coletamos email e código.</p><p style="margin-top:8px"><b style="color:#fff">2.</b> Dados protegidos.</p>'; }
-                document.getElementById('legalModal').classList.add('show');
-            },
-            
-            setupSplitter: function() {
-                var sp = document.getElementById('splitter'), ep = document.getElementById('editorPanel'), op = document.getElementById('outputPanel'), ma = document.getElementById('mainArea'), dragging = false;
-                function im() { return window.innerWidth < 768; }
-                sp.addEventListener('mousedown', function() { dragging = true; });
-                sp.addEventListener('touchstart', function() { dragging = true; }, { passive: true });
-                document.addEventListener('mousemove', function(e) {
-                    if (!dragging) return; var r = ma.getBoundingClientRect();
-                    if (im()) { var p = ((e.clientY - r.top) / r.height) * 100, v = Math.max(15, Math.min(85, p)); ep.style.flex = 'none'; ep.style.height = v + '%'; op.style.flex = 'none'; op.style.height = (100-v) + '%'; }
-                    else { var p = ((e.clientX - r.left) / r.width) * 100, v = Math.max(15, Math.min(85, p)); ep.style.flex = 'none'; ep.style.width = v + '%'; op.style.flex = 'none'; op.style.width = (100-v) + '%'; }
-                    if (APP.editor) APP.editor.refresh();
-                });
-                document.addEventListener('touchmove', function(e) { if (!dragging) return; var r = ma.getBoundingClientRect(), p = ((e.touches[0].clientY - r.top) / r.height) * 100, v = Math.max(15, Math.min(85, p)); ep.style.flex = 'none'; ep.style.height = v + '%'; op.style.flex = 'none'; op.style.height = (100-v) + '%'; }, { passive: true });
-                document.addEventListener('mouseup', function() { dragging = false; });
-                document.addEventListener('touchend', function() { dragging = false; });
-            },
-            
-            showError: function(msg) { var e = document.getElementById('errorMsg'); e.textContent = msg; e.style.display = 'block'; },
-            toast: function(msg) { var x = document.querySelector('.toast'); if (x) x.remove(); var e = document.createElement('div'); e.className = 'toast'; e.textContent = msg; document.body.appendChild(e); setTimeout(function() { e.style.opacity = '0'; e.style.transition = 'opacity 0.3s'; setTimeout(function() { if (e.parentNode) e.remove(); }, 300); }, 2500); },
-            showLoading: function(s) { document.getElementById('loadingOverlay').classList.toggle('show', s); },
-            translateError: function(e) { var m = { 'auth/email-already-in-use': 'Email já cadastrado.', 'auth/invalid-email': 'Email inválido.', 'auth/weak-password': 'Senha fraca.', 'auth/user-not-found': 'Usuário não encontrado.', 'auth/wrong-password': 'Senha incorreta.', 'auth/too-many-requests': 'Muitas tentativas.', 'auth/network-request-failed': 'Sem conexão.', 'auth/operation-not-allowed': 'Login desabilitado no Firebase.' }; return m[e.code] || e.message; }
-        };
+            requestAnimationFrame(initEditor);
+        } else {
+            if (s.roomId) s.listenRoom();
+        }
+    },
+
+    listenRoom: function(){
+        var s = this;
+        if (this.unsubscribe) this.unsubscribe();
+        this.unsubscribe = db.collection('rooms').doc(this.roomId).onSnapshot(function(doc){
+            if (!doc.exists) { s.logout(); return; }
+            var d = doc.data();
+            if (!d.members.includes(s.user.uid)) { alert('Acesso revogado.'); s.logout(); return; }
+            if (s.editor && d.code !== s.editor.getValue()) {
+                var c = s.editor.getCursor();
+                s.editor.setValue(d.code || '');
+                s.editor.setCursor(c);
+            }
+            if (d.language && d.language !== s.currentLang) {
+                s.currentLang = d.language;
+                document.getElementById('langSelect').value = d.language;
+                s.changeLanguage(d.language);
+            }
+        }, function(){});
+    },
+
+    syncCode: function(){
+        if (!this.roomId || !this.editor) return;
+        db.collection('rooms').doc(this.roomId).update({
+            code: this.editor.getValue(),
+            language: this.currentLang
+        }).catch(function(){});
+    },
+
+    changeLanguage: function(lang){
+        this.currentLang = lang;
+        var m = { html:'htmlmixed', javascript:'javascript', python:'python' };
+        if (this.editor) {
+            this.editor.setOption('mode', m[lang] || 'javascript');
+            if (!this.editor.getValue().trim()) this.editor.setValue(TMPL[lang] || '');
+        }
+        if (lang === 'html') {
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('console').style.display = 'none';
+            if (this.editor) this.updatePreview(this.editor.getValue());
+        } else {
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('console').style.display = 'block';
+        }
+        this.toast(lang.toUpperCase());
+    },
+
+    updatePreview: function(code){
+        if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+        this.previewUrl = URL.createObjectURL(new Blob([code], { type:'text/html' }));
+        document.getElementById('previewFrame').src = this.previewUrl;
+    },
+
+    runCode: function(){
+        if (!this.editor) { this.toast('Aguarde...'); return; }
+        var code = this.editor.getValue();
         
-        window.APP = APP;
-        APP.init();
-    </script>
+        if (this.currentLang === 'html') {
+            this.updatePreview(code);
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('console').style.display = 'none';
+            return;
+        }
+        
+        document.getElementById('console').style.display = 'block';
+        document.getElementById('previewContainer').style.display = 'none';
+        var c = document.getElementById('console');
+        c.className = ''; c.textContent = 'Executando...\n';
+        
+        if (this.currentLang === 'javascript') {
+            try {
+                var out = '';
+                var ol = console.log;
+                console.log = function(){ for (var i=0; i<arguments.length; i++) out += arguments[i] + ' '; out += '\n'; };
+                eval(code);
+                console.log = ol;
+                c.textContent = out || 'OK';
+            } catch(e) {
+                c.textContent = 'Erro: ' + e.message;
+                c.className = 'error';
+            }
+        } else {
+            c.textContent = 'Use HTML ou JavaScript para execucao.';
+            c.className = 'warn';
+        }
+    },
+
+    download: function(){
+        if (!this.editor) return;
+        var e = { html:'.html', javascript:'.js', python:'.py' };
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([this.editor.getValue()], { type:'text/plain' }));
+        a.download = 'projeto' + (e[this.currentLang] || '.txt');
+        a.click();
+        this.toast('Baixado!');
+    },
+
+    fullscreen: function(){
+        if (!this.editor) return;
+        var b = new Blob([this.editor.getValue()], { type:'text/html' });
+        document.getElementById('fullscreenFrame').src = URL.createObjectURL(b);
+        document.getElementById('fullscreenModal').classList.add('show');
+    },
+
+    copyLink: function(){
+        if (!this.roomId) return;
+        var url = location.origin + location.pathname + '?room=' + this.roomId;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function(){ APP.toast('Link copiado!'); });
+        } else {
+            var t = document.createElement('textarea');
+            t.value = url; t.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(t); t.select();
+            document.execCommand('copy'); document.body.removeChild(t);
+            APP.toast('Link copiado!');
+        }
+    },
+
+    showMembers: function(){
+        if (!this.roomId) return;
+        var s = this;
+        db.collection('rooms').doc(this.roomId).get().then(function(doc){
+            var d = doc.data(), list = document.getElementById('membersList');
+            list.innerHTML = '';
+            var od = document.createElement('div');
+            od.style.cssText = 'padding:8px;background:#222;border-radius:4px;margin:4px 0;font-size:12px';
+            od.innerHTML = '👑 <b>' + d.ownerEmail + '</b> (Dono)';
+            list.appendChild(od);
+            var me = d.memberEmails || {};
+            d.members.forEach(function(uid){
+                if (uid !== d.ownerId) {
+                    var dd = document.createElement('div');
+                    dd.style.cssText = 'padding:8px;background:#111;border-radius:4px;margin:4px 0;font-size:12px;display:flex;justify-content:space-between';
+                    dd.innerHTML = '<span>👤 ' + (me[uid] || uid.substring(0,8)+'...') + '</span>' + (s.isOwner ? '<button onclick="APP.removeMember(\''+uid+'\')" style="background:#a00;color:#fff;border:none;padding:2px 8px;border-radius:3px;cursor:pointer">Remover</button>' : '');
+                    list.appendChild(dd);
+                }
+            });
+            document.getElementById('membersModal').classList.add('show');
+        });
+    },
+
+    removeMember: function(uid){
+        if (!this.isOwner || !confirm('Remover?')) return;
+        var s = this, u = { members: firebase.firestore.FieldValue.arrayRemove(uid) };
+        u['memberEmails.' + uid] = firebase.firestore.FieldValue.delete();
+        db.collection('rooms').doc(this.roomId).update(u).then(function(){
+            s.toast('Removido!'); s.showMembers();
+        });
+    },
+
+    showLegal: function(type){
+        var t = document.getElementById('legalTitle'), c = document.getElementById('legalContent');
+        if (type === 'terms') {
+            t.textContent = 'Termos de Uso';
+            c.innerHTML = '<p><b style="color:#fff">1.</b> Ao usar o CodeCollab, voce concorda.</p><p style="margin-top:8px"><b style="color:#fff">2.</b> Suporte a HTML, JavaScript e Python.</p><p style="margin-top:8px"><b style="color:#fff">3.</b> Voce e responsavel pelo seu codigo.</p>';
+        } else {
+            t.textContent = 'Privacidade (LGPD)';
+            c.innerHTML = '<p><b style="color:#fff">1.</b> Coletamos apenas email e codigo.</p><p style="margin-top:8px"><b style="color:#fff">2.</b> Dados protegidos com criptografia.</p><p style="margin-top:8px"><b style="color:#fff">3.</b> Direito a exclusao dos dados.</p>';
+        }
+        document.getElementById('legalModal').classList.add('show');
+    },
+
+    setupSplitter: function(){
+        var sp = document.getElementById('splitter'),
+            ep = document.getElementById('editorPanel'),
+            op = document.getElementById('outputPanel'),
+            ma = document.getElementById('mainArea'),
+            dragging = false;
+
+        function im(){ return window.innerWidth < 768; }
+
+        sp.addEventListener('mousedown', function(e){ e.preventDefault(); dragging = true; });
+        sp.addEventListener('touchstart', function(e){ dragging = true; }, { passive: true });
+
+        document.addEventListener('mousemove', function(e){
+            if (!dragging) return;
+            e.preventDefault();
+            var r = ma.getBoundingClientRect();
+            if (im()) {
+                var p = ((e.clientY - r.top) / r.height) * 100;
+                var v = Math.max(15, Math.min(85, p));
+                ep.style.flex = 'none'; ep.style.height = v + '%';
+                op.style.flex = 'none'; op.style.height = (100-v) + '%';
+            } else {
+                var ph = ((e.clientX - r.left) / r.width) * 100;
+                var vh = Math.max(15, Math.min(85, ph));
+                ep.style.flex = 'none'; ep.style.width = vh + '%';
+                op.style.flex = 'none'; op.style.width = (100-vh) + '%';
+            }
+            if (APP.editor) APP.editor.refresh();
+        });
+
+        document.addEventListener('touchmove', function(e){
+            if (!dragging) return;
+            var r = ma.getBoundingClientRect();
+            var p = ((e.touches[0].clientY - r.top) / r.height) * 100;
+            var v = Math.max(15, Math.min(85, p));
+            ep.style.flex = 'none'; ep.style.height = v + '%';
+            op.style.flex = 'none'; op.style.height = (100-v) + '%';
+            if (APP.editor) APP.editor.refresh();
+        }, { passive: true });
+
+        document.addEventListener('mouseup', function(){ dragging = false; });
+        document.addEventListener('touchend', function(){ dragging = false; });
+    },
+
+    showError: function(msg){
+        var e = document.getElementById('errorMsg');
+        e.textContent = msg; e.style.display = 'block';
+        setTimeout(function(){ e.style.display = 'none'; }, 4000);
+    },
+
+    toast: function(msg){
+        var x = document.querySelector('.toast');
+        if (x) x.remove();
+        var e = document.createElement('div');
+        e.className = 'toast'; e.textContent = msg;
+        document.body.appendChild(e);
+        setTimeout(function(){
+            e.style.opacity = '0'; e.style.transition = 'opacity .3s';
+            setTimeout(function(){ if (e.parentNode) e.remove(); }, 300);
+        }, 2000);
+    },
+
+    showLoading: function(s){
+        document.getElementById('loadingOverlay').classList.toggle('show', s);
+    },
+
+    translateError: function(e){
+        var m = {
+            'auth/email-already-in-use': 'Email ja cadastrado.',
+            'auth/invalid-email': 'Email invalido.',
+            'auth/weak-password': 'Senha muito fraca (min. 6).',
+            'auth/user-not-found': 'Usuario nao encontrado.',
+            'auth/wrong-password': 'Senha incorreta.',
+            'auth/too-many-requests': 'Muitas tentativas. Aguarde.',
+            'auth/network-request-failed': 'Sem conexao.',
+            'auth/operation-not-allowed': 'Login desabilitado. Ative no Firebase Console.'
+        };
+        return m[e.code] || (e.message || 'Erro desconhecido.');
+    }
+};
+
+// ==================== INICIAR ====================
+window.APP = APP;
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(function(){ APP.init(); }, 100);
+} else {
+    document.addEventListener('DOMContentLoaded', function(){
+        setTimeout(function(){ APP.init(); }, 100);
+    });
+}
+
+})();
+</script>
 </body>
 </html>
