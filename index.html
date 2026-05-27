@@ -140,6 +140,8 @@ toast:function(m){var x=document.querySelector('.toast');if(x)x.remove();var e=d
 showLoading:function(s){document.getElementById('loadingOverlay').classList.toggle('show',s)},
 T:function(e){var m={'auth/email-already-in-use':'Email já cadastrado.','auth/invalid-email':'Email inválido.','auth/weak-password':'Senha fraca.','auth/user-not-found':'Usuário não encontrado.','auth/wrong-password':'Senha incorreta.','auth/too-many-requests':'Muitas tentativas.','auth/network-request-failed':'Sem conexão.'};return m[e.code]||e.message}};
 window.APP=A;A.i();
+// Força limpar cache
+if(!location.search.includes('v=')){location.search='?v='+Date.now()}
 </script>
 </body>
 </html>
