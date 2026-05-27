@@ -3,697 +3,2397 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CodeCollab Pro</title>
+    <title>CodeCollab Pro - IDE Multi-Projetos com IA</title>
     <meta name="theme-color" content="#0a0a0a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
-    
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        html,body{
-            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-            background:#0a0a0a;color:#e0e0e0;
-            height:100vh;height:100dvh;width:100vw;
-            overflow:hidden;position:fixed;top:0;left:0;
-            -webkit-font-smoothing:antialiased;
-            -webkit-text-size-adjust:100%;
+        :root {
+            --bg: #0a0a0a;
+            --bg2: #141414;
+            --bg3: #1a1a1a;
+            --border: #2a2a2a;
+            --text: #e0e0e0;
+            --text2: #888;
+            --accent: #4a90d9;
+            --green: #10b981;
+            --red: #ef4444;
+            --purple: #6366F1;
         }
-        #loginPage{
-            display:flex;align-items:center;justify-content:center;
-            height:100%;width:100%;background:linear-gradient(135deg,#0a0a0a,#1a1a2e);
-            padding:16px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .login-card{
-            background:#141414;border:1px solid #2a2a2a;border-radius:16px;
-            padding:24px 20px;width:100%;max-width:400px;
-            box-shadow:0 20px 60px rgba(0,0,0,0.5);
+        html,
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
         }
-        .login-card h1{text-align:center;font-size:24px;font-weight:700;color:#fff;margin-bottom:4px}
-        .login-card .sub{text-align:center;font-size:10px;color:#666;margin-bottom:16px;text-transform:uppercase;letter-spacing:2px;font-family:monospace}
-        .input-group{margin-bottom:10px}
-        .input-group label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px}
-        .input-group input{
-            width:100%;padding:10px 12px;background:#1a1a1a;
-            border:1px solid #2a2a2a;border-radius:8px;color:#fff;
-            font-size:16px;outline:none;transition:border-color .2s;
-            -webkit-appearance:none;
+
+        /* ========== LOGIN ========== */
+        #loginPage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+            padding: 16px;
+            z-index: 10;
         }
-        .input-group input:focus{border-color:#4a90d9}
-        .checkbox-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:#999}
-        .checkbox-row input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#4a90d9;flex-shrink:0}
-        .btn-row{display:flex;gap:10px;margin-top:16px}
-        .btn{
-            flex:1;padding:12px;border-radius:8px;border:none;
-            font-size:14px;font-weight:600;cursor:pointer;
-            transition:all .15s;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;
+        .login-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
-        .btn:active{transform:scale(.97)}
-        .btn-primary{background:#fff;color:#000}
-        .btn-outline{background:transparent;border:1px solid #333;color:#ccc}
-        .error-msg{
-            background:#2d0000;border:1px solid #5c0000;color:#ff6b6b;
-            padding:10px;border-radius:6px;font-size:12px;text-align:center;
-            margin-top:10px;display:none;font-family:monospace;
+        .login-card h1 {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
         }
-        #editorPage{display:none;height:100%;width:100%;flex-direction:column}
-        .toolbar{
-            display:flex;align-items:center;justify-content:space-between;
-            padding:6px 8px;background:#141414;border-bottom:1px solid #2a2a2a;
-            flex-shrink:0;flex-wrap:wrap;gap:4px;min-height:44px;
+        .login-card .sub {
+            text-align: center;
+            font-size: 10px;
+            color: var(--text2);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: monospace;
         }
-        .toolbar-left{display:flex;align-items:center;gap:6px}
-        .toolbar-right{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-        .toolbar-title{font-weight:700;font-size:14px;color:#fff;white-space:nowrap}
-        .room-badge{
-            background:#1a1a1a;border:1px solid #2a2a2a;color:#888;
-            font-family:monospace;font-size:10px;padding:3px 6px;
-            border-radius:4px;cursor:pointer;white-space:nowrap;
+        .input-group {
+            margin-bottom: 10px;
         }
-        .room-badge:active{border-color:#4a90d9}
-        .tbtn{
-            padding:7px 9px;border-radius:4px;border:1px solid #2a2a2a;
-            background:#1a1a1a;color:#ccc;cursor:pointer;font-size:10px;
-            font-family:monospace;transition:all .15s;white-space:nowrap;
-            -webkit-appearance:none;-webkit-tap-highlight-color:transparent;
-            min-height:30px;min-width:30px;
+        .input-group label {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text2);
+            margin-bottom: 4px;
         }
-        .tbtn:active{background:#333;border-color:#4a90d9}
-        .tbtn.green{background:#0d7a3e;border-color:#10b981;color:#d1fae5}
-        .tbtn.red{background:#7f1d1d;border-color:#ef4444;color:#fecaca}
-        select.tbtn{max-width:100px}
-        .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
-        @media(min-width:768px){.main-area{flex-direction:row}}
-        .panel{display:flex;flex-direction:column;overflow:hidden;min-height:0}
-        .panel-header{
-            padding:4px 8px;background:#1a1a1a;border-bottom:1px solid #2a2a2a;
-            font-size:10px;color:#666;font-family:monospace;flex-shrink:0;
-            user-select:none;-webkit-user-select:none;
+        .input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
         }
-        .panel-body{flex:1;overflow:hidden;position:relative}
-        #console{
-            background:#0d0d0d;color:#0f0;font-family:monospace;
-            font-size:11px;padding:10px;height:100%;overflow-y:auto;
-            -webkit-overflow-scrolling:touch;white-space:pre-wrap;
+        .input-group input:focus {
+            border-color: var(--accent);
         }
-        #console.error{color:#f44}
-        #console.warn{color:#fa0}
-        #previewContainer{
-            display:none;height:100%;width:100%;
-            position:absolute;top:0;left:0;background:#fff;
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            font-size: 12px;
+            color: #999;
         }
-        #previewFrame{width:100%;height:100%;border:none;background:#fff}
-        .splitter{
-            width:100%;height:6px;background:#2a2a2a;cursor:row-resize;
-            flex-shrink:0;transition:background .2s;touch-action:none;
-            min-height:6px;
+        .checkbox-row input[type=checkbox] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
+            flex-shrink: 0;
         }
-        .splitter:active{background:#4a90d9}
-        @media(min-width:768px){.splitter{width:6px;height:auto;cursor:col-resize;min-height:0;min-width:6px}}
-        .modal{
-            display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
-            z-index:100;align-items:center;justify-content:center;padding:16px;
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
         }
-        .modal.show{display:flex}
-        .modal-content{
-            background:#141414;border:1px solid #2a2a2a;border-radius:12px;
-            padding:20px;width:100%;max-width:400px;max-height:80vh;
-            overflow-y:auto;-webkit-overflow-scrolling:touch;
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
         }
-        .modal-content h3{color:#fff;font-size:16px;margin-bottom:10px}
-        .modal-content button{
-            width:100%;padding:10px;margin-top:8px;background:#2a2a2a;
-            color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;
-            -webkit-appearance:none;min-height:44px;
+        .btn:active {
+            transform: scale(.97);
         }
-        .toast{
-            position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-            background:#fff;color:#000;padding:10px 18px;border-radius:20px;
-            font-size:12px;font-family:monospace;z-index:200;
-            white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.5);
-            animation:toastIn .3s ease;pointer-events:none;
+        .btn-primary {
+            background: #fff;
+            color: #000;
         }
-        @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-        .loading{
-            display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
-            z-index:300;align-items:center;justify-content:center;
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #333;
+            color: #ccc;
         }
-        .loading.show{display:flex}
-        .spinner{
-            width:36px;height:36px;border:3px solid #2a2a2a;
-            border-top:3px solid #ccc;border-radius:50%;
-            animation:spin .8s linear infinite;margin:0 auto 12px;
+        .error-msg {
+            background: #2d0000;
+            border: 1px solid #5c0000;
+            color: #ff6b6b;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            font-family: monospace;
         }
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .link{color:#4af;text-decoration:underline;cursor:pointer}
-        .CodeMirror{height:100%!important;font-size:13px}
-        @media(min-width:768px){.CodeMirror{font-size:14px}}
-        textarea#codeEditor{display:none}
+
+        /* ========== EDITOR PAGE ========== */
+        #editorPage {
+            display: none;
+            height: 100%;
+            width: 100%;
+            flex-direction: column;
+        }
+
+        /* TOOLBAR */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 4px;
+            min-height: 44px;
+        }
+        .toolbar-left,
+        .toolbar-center,
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .toolbar-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .room-badge {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            font-family: monospace;
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .tbtn {
+            padding: 7px 9px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: var(--bg3);
+            color: #ccc;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: monospace;
+            transition: all .15s;
+            white-space: nowrap;
+            min-height: 30px;
+            min-width: 30px;
+        }
+        .tbtn:active {
+            background: #333;
+            border-color: var(--accent);
+        }
+        .tbtn.green {
+            background: #0d7a3e;
+            border-color: var(--green);
+            color: #d1fae5;
+        }
+        .tbtn.red {
+            background: #7f1d1d;
+            border-color: var(--red);
+            color: #fecaca;
+        }
+        .tbtn.purple {
+            background: #2d1b69;
+            border-color: var(--purple);
+            color: #ddd6fe;
+        }
+        .tbtn.blue {
+            background: #1e3a5f;
+            border-color: var(--accent);
+            color: #dbeafe;
+        }
+        select.tbtn {
+            max-width: 100px;
+        }
+
+        /* MAIN LAYOUT */
+        .main-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* EXPLORER */
+        .file-explorer {
+            width: 200px;
+            min-width: 150px;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: width 0.3s;
+        }
+        .explorer-header {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text2);
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .explorer-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .project-folder {
+            padding: 6px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background .15s;
+            border-radius: 3px;
+            margin: 1px 3px;
+        }
+        .project-folder:hover {
+            background: var(--bg3);
+        }
+        .project-folder.active {
+            background: var(--bg3);
+            border-left: 2px solid var(--accent);
+        }
+        .project-folder .actions {
+            display: none;
+            margin-left: auto;
+            gap: 2px;
+        }
+        .project-folder:hover .actions {
+            display: flex;
+        }
+        .file-item {
+            padding: 3px 8px 3px 20px;
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 3px;
+            margin: 1px 3px;
+            color: var(--text2);
+        }
+        .file-item:hover {
+            background: var(--bg3);
+            color: #fff;
+        }
+        .file-item.active {
+            background: var(--bg3);
+            color: var(--accent);
+        }
+
+        /* EDITOR PANEL */
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .tabs-container {
+            display: flex;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            flex-shrink: 0;
+            min-height: 30px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab {
+            padding: 5px 12px;
+            cursor: pointer;
+            font-size: 10px;
+            white-space: nowrap;
+            border-right: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background .15s;
+        }
+        .tab:hover {
+            background: var(--bg3);
+        }
+        .tab.active {
+            background: var(--bg);
+            border-bottom: 2px solid var(--accent);
+        }
+        .tab .close-tab {
+            font-size: 12px;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .tab:hover .close-tab {
+            opacity: 0.7;
+        }
+        .tab .close-tab:hover {
+            opacity: 1;
+            color: var(--red);
+        }
+
+        .code-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .editor-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            min-width: 0;
+        }
+        .CodeMirror {
+            height: 100% !important;
+            font-size: 13px;
+        }
+        @media(min-width:768px) {
+            .CodeMirror {
+                font-size: 14px;
+            }
+        }
+
+        /* RIGHT PANEL */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            width: 40%;
+            min-width: 250px;
+        }
+        .right-tabs {
+            display: flex;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .right-tab {
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: monospace;
+            color: var(--text2);
+            border: none;
+            background: transparent;
+            border-bottom: 2px solid transparent;
+            transition: all .15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .right-tab.active {
+            color: #fff;
+            border-bottom-color: var(--purple);
+        }
+        .right-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        .right-tab-content {
+            display: none;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+        .right-tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        #previewFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+        #console {
+            background: #0d0d0d;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 10px;
+            height: 100%;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        #console.error {
+            color: #f44;
+        }
+        #console.warn {
+            color: #fa0;
+        }
+
+        /* IA CHAT */
+        .ia-chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #0A0A0A;
+        }
+        .ia-header {
+            background: #0B0F19;
+            border-bottom: 1px solid #1E293B;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .ia-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        .ia-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #F3F4F6;
+        }
+        .ia-status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            color: #10B981;
+            font-family: monospace;
+        }
+        .ia-status-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #10B981;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.4;
+            }
+        }
+        .security-notice {
+            background: #0C1A0C;
+            border-bottom: 1px solid #14532D;
+            padding: 6px 12px;
+            font-size: 10px;
+            color: #4ADE80;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .quick-actions {
+            padding: 6px 10px;
+            background: #0B0F19;
+            border-bottom: 1px solid #1E293B;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .qa-btn {
+            background: #030712;
+            border: 1px solid #1E293B;
+            color: #64748B;
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .qa-btn:hover {
+            border-color: #4F46E5;
+            color: #818CF8;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .msg {
+            display: flex;
+            gap: 8px;
+            max-width: 95%;
+        }
+        .msg.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .msg-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        .msg.ai .msg-avatar {
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+        }
+        .msg.user .msg-avatar {
+            background: #1E293B;
+            color: #94A3B8;
+        }
+        .msg-bubble {
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+        .msg.ai .msg-bubble {
+            background: #0B0F19;
+            border: 1px solid #1E293B;
+            color: #CBD5E1;
+            border-radius: 4px 10px 10px 10px;
+        }
+        .msg.user .msg-bubble {
+            background: #1E1B4B;
+            border: 1px solid #312E81;
+            color: #E0E7FF;
+            border-radius: 10px 4px 10px 10px;
+        }
+        .msg-bubble pre {
+            background: #030712;
+            border: 1px solid #1E293B;
+            border-radius: 4px;
+            padding: 6px 8px;
+            margin: 5px 0;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 10px;
+            line-height: 1.4;
+            color: #94A3B8;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .msg-bubble code {
+            font-family: monospace;
+            font-size: 10px;
+            background: #0B0F19;
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: #818CF8;
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .typing-indicator span {
+            width: 5px;
+            height: 5px;
+            background: #4F46E5;
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+        .chat-input-area {
+            background: #0B0F19;
+            border-top: 1px solid #1E293B;
+            padding: 8px 10px;
+            display: flex;
+            gap: 6px;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+        #iaChatInput {
+            flex: 1;
+            background: #030712;
+            border: 1px solid #1E293B;
+            color: #F3F4F6;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            min-height: 32px;
+            max-height: 100px;
+            line-height: 1.4;
+        }
+        #iaChatInput:focus {
+            border-color: #4F46E5;
+        }
+        .ia-send-btn {
+            background: #4F46E5;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            flex-shrink: 0;
+            height: 32px;
+        }
+        .ia-send-btn:disabled {
+            background: #1E1B4B;
+            color: #4F46E5;
+            cursor: not-allowed;
+        }
+
+        /* ANALYSIS */
+        .analysis-results {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .analysis-card {
+            background: #0B0F19;
+            border: 1px solid #1E293B;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+        .analysis-card h4 {
+            font-size: 10px;
+            font-weight: 600;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .issue-item {
+            display: flex;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #0F172A;
+            font-size: 11px;
+            align-items: flex-start;
+        }
+        .issue-item:last-child {
+            border-bottom: none;
+        }
+        .issue-badge {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .badge-error {
+            background: #450A0A;
+            color: #F87171;
+        }
+        .badge-warn {
+            background: #422006;
+            color: #FB923C;
+        }
+        .badge-info {
+            background: #0C1A3A;
+            color: #60A5FA;
+        }
+        .badge-ok {
+            background: #052E16;
+            color: #4ADE80;
+        }
+        .issue-text {
+            color: #CBD5E1;
+            line-height: 1.4;
+        }
+        .issue-line {
+            color: #475569;
+            font-size: 10px;
+            font-family: monospace;
+            margin-top: 1px;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .metric-box {
+            background: #030712;
+            border-radius: 5px;
+            padding: 8px;
+            text-align: center;
+        }
+        .metric-val {
+            font-size: 16px;
+            font-weight: 600;
+            color: #F3F4F6;
+        }
+        .metric-lbl {
+            font-size: 9px;
+            color: #475569;
+            margin-top: 2px;
+        }
+
+        /* MODALS */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-content h3 {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .modal-content .input-group {
+            margin-bottom: 12px;
+        }
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+        .modal-content textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #000;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 200;
+            white-space: nowrap;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            animation: toastIn .3s ease;
+            pointer-events: none;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .75);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+        .loading.show {
+            display: flex;
+        }
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--border);
+            border-top: 3px solid #ccc;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .link {
+            color: var(--accent);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        textarea#codeEditor {
+            display: none;
+        }
+        .breadcrumb {
+            font-size: 10px;
+            color: var(--text2);
+            padding: 2px 8px;
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+        }
+        .breadcrumb span {
+            color: var(--accent);
+        }
+        .splitter {
+            width: 4px;
+            background: var(--border);
+            cursor: col-resize;
+            flex-shrink: 0;
+            transition: background .2s;
+        }
+        .splitter:active {
+            background: var(--accent);
+        }
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text2);
+            text-align: center;
+            padding: 20px;
+        }
+        .empty-state .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
 
-<div id="loginPage">
-    <div class="login-card">
-        <div class="sub">Multi-Language IDE</div>
-        <h1>🚀 CodeCollab Pro</h1>
-        <p style="text-align:center;color:#666;font-size:11px;margin-bottom:14px">HTML, JavaScript, Python</p>
-        <div class="input-group"><label>Email</label><input type="email" id="email" placeholder="seu@email.com" autocomplete="email" inputmode="email"></div>
-        <div class="input-group"><label>Senha</label><input type="password" id="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password"></div>
-        <div class="input-group" id="roomGroup" style="display:none"><label>ID da Sala</label><input type="text" id="roomId" placeholder="Deixe vazio para criar nova"></div>
-        <div class="checkbox-row"><input type="checkbox" id="joinRoomCheck"><span>Entrar em sala existente</span></div>
-        <div class="checkbox-row"><input type="checkbox" id="lgpdCheck"><span>Aceito os <span class="link" id="termsLink">Termos</span> e <span class="link" id="lgpdLink">LGPD</span></span></div>
-        <div class="error-msg" id="errorMsg"></div>
-        <div class="btn-row">
-            <button class="btn btn-primary" id="loginBtn">Entrar</button>
-            <button class="btn btn-outline" id="registerBtn">Criar Conta</button>
-        </div>
-    </div>
-</div>
-
-<div id="editorPage">
-    <div class="toolbar">
-        <div class="toolbar-left">
-            <span class="toolbar-title">🚀 CodeCollab</span>
-            <span class="room-badge" id="roomBadge">Sala: ---</span>
-        </div>
-        <div class="toolbar-right">
-            <select id="langSelect" class="tbtn"><option value="html">HTML</option><option value="javascript">JS</option><option value="python">Python</option></select>
-            <button class="tbtn green" id="runBtn">▶ Run</button>
-            <button class="tbtn" id="downloadBtn">⬇</button>
-            <button class="tbtn" id="fullscreenBtn">⛶</button>
-            <button class="tbtn" id="configBtn">⚙️</button>
-            <button class="tbtn" id="membersBtn">👥</button>
-            <button class="tbtn red" id="logoutBtn">Sair</button>
-        </div>
-    </div>
-    <div class="main-area" id="mainArea">
-        <div class="panel" id="editorPanel">
-            <div class="panel-header">📝 Editor</div>
-            <div class="panel-body"><textarea id="codeEditor"></textarea></div>
-        </div>
-        <div class="splitter" id="splitter"></div>
-        <div class="panel" id="outputPanel">
-            <div class="panel-header">💻 Console / Preview</div>
-            <div class="panel-body">
-                <div id="console">// ▶ Run ou Ctrl+Enter para executar</div>
-                <div id="previewContainer"><iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe></div>
+    <!-- LOGIN PAGE -->
+    <div id="loginPage">
+        <div class="login-card">
+            <div class="sub">IDE Multi-Projetos + IA</div>
+            <h1>🚀 CodeCollab Pro</h1>
+            <p style="text-align:center;color:#666;font-size:11px;margin-bottom:14px">
+                Múltiplos projetos • Colaboração em tempo real • IA Assistant
+            </p>
+            <div class="input-group"><label>Email</label><input type="email" id="email" placeholder="seu@email.com" autocomplete="email" inputmode="email"></div>
+            <div class="input-group"><label>Senha</label><input type="password" id="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password"></div>
+            <div class="input-group" id="roomGroup" style="display:none"><label>ID da Sala</label><input type="text" id="roomIdInput" placeholder="Deixe vazio para criar nova"></div>
+            <div class="checkbox-row"><input type="checkbox" id="joinRoomCheck"><span>Entrar em sala existente</span></div>
+            <div class="checkbox-row"><input type="checkbox" id="lgpdCheck"><span>Aceito os <span class="link" id="termsLink">Termos</span> e <span class="link" id="lgpdLink">LGPD</span></span></div>
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="loginBtn">Entrar</button>
+                <button class="btn btn-outline" id="registerBtn">Criar Conta</button>
             </div>
         </div>
     </div>
-</div>
 
-<div class="modal" id="configModal"><div class="modal-content"><h3>⚙️ Configurações</h3><div class="input-group"><label>Tema</label><select id="themeSelect" style="width:100%;padding:8px;background:#1a1a1a;border:1px solid #2a2a2a;color:#fff;border-radius:4px"><option value="monokai">Monokai</option><option value="eclipse">Eclipse</option></select></div><div class="input-group"><label>Fonte: <span id="fontSizeVal">14px</span></label><input type="range" id="fontSizeSlider" min="10" max="24" value="14" style="width:100%"></div><div class="checkbox-row"><input type="checkbox" id="autosaveCheck" checked><span>Auto-save</span></div><button id="closeConfigBtn">Fechar</button></div></div>
-<div class="modal" id="membersModal"><div class="modal-content"><h3>👥 Membros</h3><div id="membersList" style="margin:8px 0"></div><button id="closeMembersBtn">Fechar</button></div></div>
-<div class="modal" id="legalModal"><div class="modal-content"><h3 id="legalTitle"></h3><div id="legalContent" style="font-size:13px;color:#999;line-height:1.6"></div><button id="closeLegalBtn">Fechar</button></div></div>
-<div class="modal" id="fullscreenModal"><div style="position:fixed;inset:0;background:#000;z-index:150;display:flex;flex-direction:column"><div style="padding:8px 12px;background:#1a1a1a;display:flex;justify-content:space-between;align-items:center;flex-shrink:0"><span style="color:#888;font-size:12px">▶ Preview</span><button id="closeFullscreenBtn" style="background:#a00;color:#fff;border:none;padding:8px 14px;border-radius:4px;cursor:pointer;font-size:13px;min-height:36px">✕ Fechar</button></div><iframe id="fullscreenFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups" style="flex:1;border:none;background:#fff"></iframe></div></div>
-<div class="loading" id="loadingOverlay"><div style="text-align:center"><div class="spinner"></div><span style="color:#ccc;font-size:13px">Carregando...</span></div></div>
+    <!-- EDITOR PAGE -->
+    <div id="editorPage">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <span class="toolbar-title">🚀 CodeCollab Pro</span>
+                <span class="room-badge" id="roomBadge">Sala: ---</span>
+            </div>
+            <div class="toolbar-center">
+                <button class="tbtn blue" id="newProjectBtn">📁 +Projeto</button>
+                <button class="tbtn" id="newFileBtn">📄 +Arquivo</button>
+            </div>
+            <div class="toolbar-right">
+                <select id="langSelect" class="tbtn">
+                    <option value="html">HTML</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="css">CSS</option>
+                    <option value="python">Python</option>
+                </select>
+                <button class="tbtn green" id="runBtn">▶ Run</button>
+                <button class="tbtn" id="downloadBtn">⬇</button>
+                <button class="tbtn purple" id="aiBtn" title="IA Assistant">🤖</button>
+                <button class="tbtn" id="membersBtn">👥</button>
+                <button class="tbtn red" id="logoutBtn">Sair</button>
+            </div>
+        </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+        <div class="breadcrumb">
+            <span>🏠</span> / <span id="breadcrumbProject">---</span> / <span id="breadcrumbFile">---</span>
+        </div>
 
-<script>
-(function(){
-'use strict';
+        <div class="main-area" id="mainArea">
+            <div class="file-explorer" id="fileExplorer">
+                <div class="explorer-header">
+                    <span>📁 EXPLORER</span>
+                    <button class="tbtn" style="padding:2px 6px;font-size:9px" id="toggleExplorerBtn">☰</button>
+                </div>
+                <div class="explorer-content" id="explorerContent">
+                    <div style="padding:20px;text-align:center;color:var(--text2);font-size:11px">Crie um projeto para começar</div>
+                </div>
+            </div>
 
-// ==================== FIREBASE ====================
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp({
-        apiKey: "AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",
-        authDomain: "codeverse-14794.firebaseapp.com",
-        projectId: "codeverse-14794",
-        storageBucket: "codeverse-14794.firebasestorage.app",
-        messagingSenderId: "307083349125",
-        appId: "1:307083349125:web:11b96a4c3fd856d6236dec"
-    });
-}
+            <div class="editor-panel">
+                <div class="tabs-container" id="tabsContainer"></div>
+                <div class="code-area" id="codeArea">
+                    <div class="editor-container" id="editorContainer">
+                        <textarea id="codeEditor"></textarea>
+                    </div>
+                    <div class="splitter" id="splitterV"></div>
+                    <div class="right-panel" id="rightPanel">
+                        <div class="right-tabs">
+                            <button class="right-tab active" data-tab="preview">👁️ Preview</button>
+                            <button class="right-tab" data-tab="console">💻 Console</button>
+                            <button class="right-tab" data-tab="analysis">🔍 Análise</button>
+                            <button class="right-tab" data-tab="ai">🤖 IA Chat</button>
+                        </div>
+                        <div class="right-content">
+                            <div class="right-tab-content active" id="rtcontent-preview">
+                                <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe>
+                            </div>
+                            <div class="right-tab-content" id="rtcontent-console">
+                                <div id="console">// ▶ Run ou Ctrl+Enter para executar</div>
+                            </div>
+                            <div class="right-tab-content" id="rtcontent-analysis">
+                                <div class="analysis-results" id="analysisContent">
+                                    <div class="empty-state">
+                                        <div class="icon">🔍</div>
+                                        <p style="font-size:12px">Cole código no editor e clique em Analisar</p>
+                                        <button class="tbtn green" id="analyzeBtn" style="margin-top:10px;font-size:11px;padding:8px 14px">🔍 Analisar Código</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="right-tab-content" id="rtcontent-ai">
+                                <div class="ia-chat-container">
+                                    <div class="ia-header">
+                                        <div class="ia-avatar">✦</div>
+                                        <div><div class="ia-name">CodeCollab AI</div></div>
+                                        <div class="ia-status"><div class="ia-status-dot"></div>ONLINE</div>
+                                    </div>
+                                    <div class="security-notice">🔒 Credenciais sanitizadas automaticamente</div>
+                                    <div class="quick-actions">
+                                        <button class="qa-btn" data-action="analise_geral">🔎 Analisar</button>
+                                        <button class="qa-btn" data-action="erros_criticos">🚨 Erros</button>
+                                        <button class="qa-btn" data-action="seguranca">🔐 Segurança</button>
+                                        <button class="qa-btn" data-action="melhorias">✨ Melhorias</button>
+                                        <button class="qa-btn" data-action="performance">⚡ Performance</button>
+                                        <button class="qa-btn" data-action="refatorar">🔧 Refatorar</button>
+                                    </div>
+                                    <div class="chat-messages" id="iaChatMessages">
+                                        <div class="msg ai">
+                                            <div class="msg-avatar">✦</div>
+                                            <div class="msg-bubble">
+                                                👋 <strong>Olá!</strong> Sou a IA do CodeCollab.<br><br>
+                                                ✨ Posso analisar seu código, encontrar erros e sugerir melhorias.<br>
+                                                💡 Use os atalhos acima ou digite sua pergunta!
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="chat-input-area">
+                                        <textarea id="iaChatInput" rows="1" placeholder="Pergunte sobre o código... (Enter para enviar)"></textarea>
+                                        <button class="ia-send-btn" id="iaSendBtn">Enviar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-var auth = firebase.auth();
-var db = firebase.firestore();
+    <!-- MODALS -->
+    <div class="modal" id="projectModal">
+        <div class="modal-content">
+            <h3>📁 Novo Projeto</h3>
+            <div class="input-group"><label>Nome do Projeto</label><input type="text" id="projectNameInput" placeholder="Ex: Meu App Incrível"></div>
+            <div class="input-group"><label>Descrição (opcional)</label><textarea id="projectDescInput" placeholder="Descreva seu projeto..."></textarea></div>
+            <div class="btn-row">
+                <button class="btn btn-outline" id="cancelProjectBtn">Cancelar</button>
+                <button class="btn btn-primary" id="confirmProjectBtn">Criar Projeto</button>
+            </div>
+        </div>
+    </div>
 
-// ==================== TEMPLATES ====================
-var TMPL = {
-    html: '<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <style>\n    body{font-family:sans-serif;padding:20px;background:#f5f5f5}h1{color:#333}button{padding:10px 20px;background:#4a90d9;color:#fff;border:none;border-radius:6px;cursor:pointer}\n  </style>\n</head>\n<body>\n  <h1>🚀 Olá Mundo!</h1>\n  <p>Seu código HTML aqui.</p>\n  <button onclick="alert(\'Funcionando!\')">Testar</button>\n</body>\n</html>',
-    javascript: '// JavaScript\nconsole.log("Hello, World!");\n\nvar nome = "Dev";\nconsole.log("Bem-vindo, " + nome + "!");\n',
-    python: '# Python 3\nprint("Hello, World!")\n\nnome = "Dev"\nprint(f"Bem-vindo, {nome}!")\n'
-};
+    <div class="modal" id="fileModal">
+        <div class="modal-content">
+            <h3>📄 Novo Arquivo</h3>
+            <div class="input-group"><label>Nome do Arquivo</label><input type="text" id="fileNameInput" placeholder="Ex: index.html, style.css, script.js"></div>
+            <div class="btn-row">
+                <button class="btn btn-outline" id="cancelFileBtn">Cancelar</button>
+                <button class="btn btn-primary" id="confirmFileBtn">Criar Arquivo</button>
+            </div>
+        </div>
+    </div>
 
-// ==================== APP ====================
-var APP = {
-    user: null, roomId: null, isOwner: false, editor: null,
-    currentLang: 'html', fontSize: 14, autoSave: true,
-    unsubscribe: null, previewUrl: null, syncTimer: null,
+    <div class="modal" id="membersModal">
+        <div class="modal-content">
+            <h3>👥 Membros da Sala</h3>
+            <div id="membersList" style="margin:8px 0"></div>
+            <button class="btn btn-outline" id="closeMembersBtn">Fechar</button>
+        </div>
+    </div>
 
-    init: function() {
-        var s = this;
-        
-        document.getElementById('loginPage').style.display = 'flex';
-        document.getElementById('editorPage').style.display = 'none';
+    <div class="loading" id="loadingOverlay">
+        <div style="text-align:center">
+            <div class="spinner"></div>
+            <span style="color:#ccc;font-size:13px">Carregando...</span>
+        </div>
+    </div>
 
-        // Bind all buttons
-        document.getElementById('loginBtn').onclick = function(){ s.login(); };
-        document.getElementById('registerBtn').onclick = function(){ s.register(); };
-        document.getElementById('logoutBtn').onclick = function(){ s.logout(); };
-        document.getElementById('runBtn').onclick = function(){ s.runCode(); };
-        document.getElementById('downloadBtn').onclick = function(){ s.download(); };
-        document.getElementById('fullscreenBtn').onclick = function(){ s.fullscreen(); };
-        document.getElementById('configBtn').onclick = function(){ document.getElementById('configModal').classList.add('show'); };
-        document.getElementById('membersBtn').onclick = function(){ s.showMembers(); };
-        document.getElementById('roomBadge').onclick = function(){ s.copyLink(); };
-        document.getElementById('closeConfigBtn').onclick = function(){ document.getElementById('configModal').classList.remove('show'); };
-        document.getElementById('closeMembersBtn').onclick = function(){ document.getElementById('membersModal').classList.remove('show'); };
-        document.getElementById('closeLegalBtn').onclick = function(){ document.getElementById('legalModal').classList.remove('show'); };
-        document.getElementById('closeFullscreenBtn').onclick = function(){ document.getElementById('fullscreenModal').classList.remove('show'); };
-        document.getElementById('termsLink').onclick = function(){ s.showLegal('terms'); };
-        document.getElementById('lgpdLink').onclick = function(){ s.showLegal('lgpd'); };
-        document.getElementById('joinRoomCheck').onchange = function(){ document.getElementById('roomGroup').style.display = this.checked ? 'block' : 'none'; };
-        document.getElementById('langSelect').onchange = function(){ s.changeLanguage(this.value); };
-        document.getElementById('themeSelect').onchange = function(){ if (s.editor) s.editor.setOption('theme', this.value); };
-        document.getElementById('fontSizeSlider').oninput = function(){
-            s.fontSize = parseInt(this.value);
-            document.getElementById('fontSizeVal').textContent = s.fontSize + 'px';
-            if (s.editor) { s.editor.getWrapperElement().style.fontSize = s.fontSize + 'px'; s.editor.refresh(); }
-        };
-        document.getElementById('autosaveCheck').onchange = function(){ s.autoSave = this.checked; };
+    <!-- SCRIPTS -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
 
-        // Close modals on outside click
-        document.querySelectorAll('.modal').forEach(function(m){
-            m.onclick = function(e){ if (e.target === m) m.classList.remove('show'); };
-        });
+    <script>
+        (function() {
+            'use strict';
 
-        // Keyboard shortcuts
-        document.onkeydown = function(e){
-            if (e.key === 'Escape') document.querySelectorAll('.modal.show').forEach(function(m){ m.classList.remove('show'); });
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); s.runCode(); }
-        };
-
-        // Splitter
-        this.setupSplitter();
-
-        // Auth state
-        auth.onAuthStateChanged(function(user){
-            if (user) {
-                s.user = user;
-                var p = new URLSearchParams(location.search);
-                var r = p.get('room');
-                if (r) s.joinRoom(r);
-            }
-        });
-
-        // Safety timeout for loading
-        setTimeout(function(){
-            document.getElementById('loadingOverlay').classList.remove('show');
-        }, 10000);
-    },
-
-    login: function(){
-        if (!document.getElementById('lgpdCheck').checked) { this.showError('Aceite os Termos e LGPD.'); return; }
-        var email = document.getElementById('email').value.trim();
-        var pass = document.getElementById('password').value;
-        if (!email || !pass) { this.showError('Preencha os campos.'); return; }
-        this.showLoading(true);
-        var s = this;
-        auth.signInWithEmailAndPassword(email, pass)
-            .then(function(r){
-                s.user = r.user;
-                var jc = document.getElementById('joinRoomCheck').checked;
-                var rv = document.getElementById('roomId').value.trim();
-                if (jc && rv) return s.joinRoom(rv);
-                return s.createRoom();
-            })
-            .catch(function(e){ s.showError(s.translateError(e)); })
-            .finally(function(){ s.showLoading(false); });
-    },
-
-    register: function(){
-        if (!document.getElementById('lgpdCheck').checked) { this.showError('Aceite os Termos e LGPD.'); return; }
-        var email = document.getElementById('email').value.trim();
-        var pass = document.getElementById('password').value;
-        if (!email || !pass) { this.showError('Preencha os campos.'); return; }
-        if (pass.length < 6) { this.showError('Senha: mínimo 6 caracteres.'); return; }
-        this.showLoading(true);
-        var s = this;
-        auth.createUserWithEmailAndPassword(email, pass)
-            .then(function(r){ s.user = r.user; return s.createRoom(); })
-            .catch(function(e){ s.showError(s.translateError(e)); })
-            .finally(function(){ s.showLoading(false); });
-    },
-
-    logout: function(){
-        this.showLoading(true);
-        var s = this;
-        if (this.unsubscribe) { this.unsubscribe(); this.unsubscribe = null; }
-        if (this.editor) { this.editor.toTextArea(); this.editor = null; }
-        if (this.previewUrl) { URL.revokeObjectURL(this.previewUrl); this.previewUrl = null; }
-        auth.signOut().then(function(){
-            s.user = null; s.roomId = null; s.isOwner = false;
-            history.pushState({}, '', location.pathname);
-            document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('editorPage').style.display = 'none';
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-            s.showLoading(false);
-        });
-    },
-
-    createRoom: function(){
-        var s = this;
-        return db.collection('rooms').add({
-            ownerId: this.user.uid,
-            ownerEmail: this.user.email,
-            members: [this.user.uid],
-            memberEmails: {},
-            code: TMPL[this.currentLang] || '',
-            language: this.currentLang,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function(doc){
-            s.roomId = doc.id; s.isOwner = true;
-            history.pushState({}, '', '?room=' + doc.id);
-            s.showEditor(); s.toast('Sala criada!');
-        }).catch(function(){ s.showError('Erro ao criar sala.'); });
-    },
-
-    joinRoom: function(id){
-        var s = this;
-        return db.collection('rooms').doc(id).get().then(function(doc){
-            if (!doc.exists) { s.showError('Sala nao encontrada.'); throw new Error('nf'); }
-            var d = doc.data();
-            if (!d.members.includes(s.user.uid)) {
-                var u = { members: firebase.firestore.FieldValue.arrayUnion(s.user.uid) };
-                u['memberEmails.' + s.user.uid] = s.user.email;
-                return db.collection('rooms').doc(id).update(u).then(function(){ return d; });
-            }
-            return d;
-        }).then(function(d){
-            if (!d) return;
-            s.roomId = id; s.isOwner = d.ownerId === s.user.uid;
-            if (d.language) { s.currentLang = d.language; document.getElementById('langSelect').value = d.language; }
-            history.pushState({}, '', '?room=' + id);
-            s.showEditor(); s.toast('Entrou na sala!');
-        }).catch(function(e){ if (e.message !== 'nf') s.showError('Erro.'); });
-    },
-
-    showEditor: function(){
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('editorPage').style.display = 'flex';
-        document.getElementById('roomBadge').textContent = 'Sala: ' + (this.roomId ? this.roomId.substring(0, 10) + '...' : '---');
-
-        var s = this;
-
-        if (!this.editor) {
-            // Usar requestAnimationFrame para garantir DOM pronto
-            var initEditor = function(){
-                if (s.editor) return;
-                var ta = document.getElementById('codeEditor');
-                if (!ta) { requestAnimationFrame(initEditor); return; }
-                
-                s.editor = CodeMirror.fromTextArea(ta, {
-                    mode: 'htmlmixed', theme: 'monokai', lineNumbers: true,
-                    lineWrapping: true, autoCloseTags: true, autoCloseBrackets: true,
-                    indentUnit: 2, tabSize: 2
-                });
-                
-                s.editor.on('change', function(){
-                    if (s.currentLang === 'html') s.updatePreview(s.editor.getValue());
-                    if (s.autoSave && s.roomId) {
-                        clearTimeout(s.syncTimer);
-                        s.syncTimer = setTimeout(function(){ s.syncCode(); }, 600);
-                    }
-                });
-                
-                s.editor.getWrapperElement().style.fontSize = s.fontSize + 'px';
-                if (s.roomId) s.listenRoom();
-            };
-            
-            requestAnimationFrame(initEditor);
-        } else {
-            if (s.roomId) s.listenRoom();
-        }
-    },
-
-    listenRoom: function(){
-        var s = this;
-        if (this.unsubscribe) this.unsubscribe();
-        this.unsubscribe = db.collection('rooms').doc(this.roomId).onSnapshot(function(doc){
-            if (!doc.exists) { s.logout(); return; }
-            var d = doc.data();
-            if (!d.members.includes(s.user.uid)) { alert('Acesso revogado.'); s.logout(); return; }
-            if (s.editor && d.code !== s.editor.getValue()) {
-                var c = s.editor.getCursor();
-                s.editor.setValue(d.code || '');
-                s.editor.setCursor(c);
-            }
-            if (d.language && d.language !== s.currentLang) {
-                s.currentLang = d.language;
-                document.getElementById('langSelect').value = d.language;
-                s.changeLanguage(d.language);
-            }
-        }, function(){});
-    },
-
-    syncCode: function(){
-        if (!this.roomId || !this.editor) return;
-        db.collection('rooms').doc(this.roomId).update({
-            code: this.editor.getValue(),
-            language: this.currentLang
-        }).catch(function(){});
-    },
-
-    changeLanguage: function(lang){
-        this.currentLang = lang;
-        var m = { html:'htmlmixed', javascript:'javascript', python:'python' };
-        if (this.editor) {
-            this.editor.setOption('mode', m[lang] || 'javascript');
-            if (!this.editor.getValue().trim()) this.editor.setValue(TMPL[lang] || '');
-        }
-        if (lang === 'html') {
-            document.getElementById('previewContainer').style.display = 'block';
-            document.getElementById('console').style.display = 'none';
-            if (this.editor) this.updatePreview(this.editor.getValue());
-        } else {
-            document.getElementById('previewContainer').style.display = 'none';
-            document.getElementById('console').style.display = 'block';
-        }
-        this.toast(lang.toUpperCase());
-    },
-
-    updatePreview: function(code){
-        if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
-        this.previewUrl = URL.createObjectURL(new Blob([code], { type:'text/html' }));
-        document.getElementById('previewFrame').src = this.previewUrl;
-    },
-
-    runCode: function(){
-        if (!this.editor) { this.toast('Aguarde...'); return; }
-        var code = this.editor.getValue();
-        
-        if (this.currentLang === 'html') {
-            this.updatePreview(code);
-            document.getElementById('previewContainer').style.display = 'block';
-            document.getElementById('console').style.display = 'none';
-            return;
-        }
-        
-        document.getElementById('console').style.display = 'block';
-        document.getElementById('previewContainer').style.display = 'none';
-        var c = document.getElementById('console');
-        c.className = ''; c.textContent = 'Executando...\n';
-        
-        if (this.currentLang === 'javascript') {
+            // ==================== FIREBASE INIT ====================
             try {
-                var out = '';
-                var ol = console.log;
-                console.log = function(){ for (var i=0; i<arguments.length; i++) out += arguments[i] + ' '; out += '\n'; };
-                eval(code);
-                console.log = ol;
-                c.textContent = out || 'OK';
-            } catch(e) {
-                c.textContent = 'Erro: ' + e.message;
-                c.className = 'error';
-            }
-        } else {
-            c.textContent = 'Use HTML ou JavaScript para execucao.';
-            c.className = 'warn';
-        }
-    },
-
-    download: function(){
-        if (!this.editor) return;
-        var e = { html:'.html', javascript:'.js', python:'.py' };
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([this.editor.getValue()], { type:'text/plain' }));
-        a.download = 'projeto' + (e[this.currentLang] || '.txt');
-        a.click();
-        this.toast('Baixado!');
-    },
-
-    fullscreen: function(){
-        if (!this.editor) return;
-        var b = new Blob([this.editor.getValue()], { type:'text/html' });
-        document.getElementById('fullscreenFrame').src = URL.createObjectURL(b);
-        document.getElementById('fullscreenModal').classList.add('show');
-    },
-
-    copyLink: function(){
-        if (!this.roomId) return;
-        var url = location.origin + location.pathname + '?room=' + this.roomId;
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(url).then(function(){ APP.toast('Link copiado!'); });
-        } else {
-            var t = document.createElement('textarea');
-            t.value = url; t.style.cssText = 'position:fixed;opacity:0';
-            document.body.appendChild(t); t.select();
-            document.execCommand('copy'); document.body.removeChild(t);
-            APP.toast('Link copiado!');
-        }
-    },
-
-    showMembers: function(){
-        if (!this.roomId) return;
-        var s = this;
-        db.collection('rooms').doc(this.roomId).get().then(function(doc){
-            var d = doc.data(), list = document.getElementById('membersList');
-            list.innerHTML = '';
-            var od = document.createElement('div');
-            od.style.cssText = 'padding:8px;background:#222;border-radius:4px;margin:4px 0;font-size:12px';
-            od.innerHTML = '👑 <b>' + d.ownerEmail + '</b> (Dono)';
-            list.appendChild(od);
-            var me = d.memberEmails || {};
-            d.members.forEach(function(uid){
-                if (uid !== d.ownerId) {
-                    var dd = document.createElement('div');
-                    dd.style.cssText = 'padding:8px;background:#111;border-radius:4px;margin:4px 0;font-size:12px;display:flex;justify-content:space-between';
-                    dd.innerHTML = '<span>👤 ' + (me[uid] || uid.substring(0,8)+'...') + '</span>' + (s.isOwner ? '<button onclick="APP.removeMember(\''+uid+'\')" style="background:#a00;color:#fff;border:none;padding:2px 8px;border-radius:3px;cursor:pointer">Remover</button>' : '');
-                    list.appendChild(dd);
+                if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+                    firebase.initializeApp({
+                        apiKey: "AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",
+                        authDomain: "codeverse-14794.firebaseapp.com",
+                        projectId: "codeverse-14794",
+                        storageBucket: "codeverse-14794.firebasestorage.app",
+                        messagingSenderId: "307083349125",
+                        appId: "1:307083349125:web:11b96a4c3fd856d6236dec"
+                    });
+                    console.log('✅ Firebase inicializado');
                 }
-            });
-            document.getElementById('membersModal').classList.add('show');
-        });
-    },
-
-    removeMember: function(uid){
-        if (!this.isOwner || !confirm('Remover?')) return;
-        var s = this, u = { members: firebase.firestore.FieldValue.arrayRemove(uid) };
-        u['memberEmails.' + uid] = firebase.firestore.FieldValue.delete();
-        db.collection('rooms').doc(this.roomId).update(u).then(function(){
-            s.toast('Removido!'); s.showMembers();
-        });
-    },
-
-    showLegal: function(type){
-        var t = document.getElementById('legalTitle'), c = document.getElementById('legalContent');
-        if (type === 'terms') {
-            t.textContent = 'Termos de Uso';
-            c.innerHTML = '<p><b style="color:#fff">1.</b> Ao usar o CodeCollab, voce concorda.</p><p style="margin-top:8px"><b style="color:#fff">2.</b> Suporte a HTML, JavaScript e Python.</p><p style="margin-top:8px"><b style="color:#fff">3.</b> Voce e responsavel pelo seu codigo.</p>';
-        } else {
-            t.textContent = 'Privacidade (LGPD)';
-            c.innerHTML = '<p><b style="color:#fff">1.</b> Coletamos apenas email e codigo.</p><p style="margin-top:8px"><b style="color:#fff">2.</b> Dados protegidos com criptografia.</p><p style="margin-top:8px"><b style="color:#fff">3.</b> Direito a exclusao dos dados.</p>';
-        }
-        document.getElementById('legalModal').classList.add('show');
-    },
-
-    setupSplitter: function(){
-        var sp = document.getElementById('splitter'),
-            ep = document.getElementById('editorPanel'),
-            op = document.getElementById('outputPanel'),
-            ma = document.getElementById('mainArea'),
-            dragging = false;
-
-        function im(){ return window.innerWidth < 768; }
-
-        sp.addEventListener('mousedown', function(e){ e.preventDefault(); dragging = true; });
-        sp.addEventListener('touchstart', function(e){ dragging = true; }, { passive: true });
-
-        document.addEventListener('mousemove', function(e){
-            if (!dragging) return;
-            e.preventDefault();
-            var r = ma.getBoundingClientRect();
-            if (im()) {
-                var p = ((e.clientY - r.top) / r.height) * 100;
-                var v = Math.max(15, Math.min(85, p));
-                ep.style.flex = 'none'; ep.style.height = v + '%';
-                op.style.flex = 'none'; op.style.height = (100-v) + '%';
-            } else {
-                var ph = ((e.clientX - r.left) / r.width) * 100;
-                var vh = Math.max(15, Math.min(85, ph));
-                ep.style.flex = 'none'; ep.style.width = vh + '%';
-                op.style.flex = 'none'; op.style.width = (100-vh) + '%';
+            } catch (e) {
+                console.error('❌ Firebase init error:', e);
             }
-            if (APP.editor) APP.editor.refresh();
-        });
 
-        document.addEventListener('touchmove', function(e){
-            if (!dragging) return;
-            var r = ma.getBoundingClientRect();
-            var p = ((e.touches[0].clientY - r.top) / r.height) * 100;
-            var v = Math.max(15, Math.min(85, p));
-            ep.style.flex = 'none'; ep.style.height = v + '%';
-            op.style.flex = 'none'; op.style.height = (100-v) + '%';
-            if (APP.editor) APP.editor.refresh();
-        }, { passive: true });
+            var auth = firebase.auth();
+            var db = firebase.firestore();
 
-        document.addEventListener('mouseup', function(){ dragging = false; });
-        document.addEventListener('touchend', function(){ dragging = false; });
-    },
+            // ==================== DEFAULT TEMPLATES ====================
+            var DEFAULT_FILES = {
+                'index.html': '<!DOCTYPE html>\n<html lang="pt-br">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Projeto</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>🚀 Olá Mundo!</h1>\n  <p>Meu projeto no CodeCollab Pro</p>\n  <script src="script.js"><\/script>\n</body>\n</html>',
+                'style.css': 'body {\n  font-family: Arial, sans-serif;\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  color: white;\n  min-height: 100vh;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  text-align: center;\n  margin: 0;\n}\n\nh1 {\n  font-size: 3em;\n  animation: pulse 2s infinite;\n}\n\n@keyframes pulse {\n  0%, 100% { transform: scale(1); }\n  50% { transform: scale(1.1); }\n}',
+                'script.js': 'console.log("✅ Projeto carregado com sucesso!");\n\ndocument.addEventListener("DOMContentLoaded", function() {\n  console.log("DOM pronto!");\n  alert("Bem-vindo ao CodeCollab Pro! 🚀");\n});'
+            };
 
-    showError: function(msg){
-        var e = document.getElementById('errorMsg');
-        e.textContent = msg; e.style.display = 'block';
-        setTimeout(function(){ e.style.display = 'none'; }, 4000);
-    },
+            // ==================== APP STATE ====================
+            var APP = {
+                user: null,
+                roomId: null,
+                isOwner: false,
+                editor: null,
+                currentFileId: null,
+                currentProjectId: null,
+                openTabs: [],
+                projects: [],
+                unsubscribe: null,
+                previewUrl: null,
+                syncTimer: null,
+                explorerCollapsed: false,
 
-    toast: function(msg){
-        var x = document.querySelector('.toast');
-        if (x) x.remove();
-        var e = document.createElement('div');
-        e.className = 'toast'; e.textContent = msg;
-        document.body.appendChild(e);
-        setTimeout(function(){
-            e.style.opacity = '0'; e.style.transition = 'opacity .3s';
-            setTimeout(function(){ if (e.parentNode) e.remove(); }, 300);
-        }, 2000);
-    },
+                // ==================== INIT ====================
+                init: function() {
+                    var s = this;
+                    console.log('🔧 Inicializando CodeCollab Pro...');
 
-    showLoading: function(s){
-        document.getElementById('loadingOverlay').classList.toggle('show', s);
-    },
+                    // Show login page
+                    document.getElementById('loginPage').style.display = 'flex';
+                    document.getElementById('editorPage').style.display = 'none';
 
-    translateError: function(e){
-        var m = {
-            'auth/email-already-in-use': 'Email ja cadastrado.',
-            'auth/invalid-email': 'Email invalido.',
-            'auth/weak-password': 'Senha muito fraca (min. 6).',
-            'auth/user-not-found': 'Usuario nao encontrado.',
-            'auth/wrong-password': 'Senha incorreta.',
-            'auth/too-many-requests': 'Muitas tentativas. Aguarde.',
-            'auth/network-request-failed': 'Sem conexao.',
-            'auth/operation-not-allowed': 'Login desabilitado. Ative no Firebase Console.'
-        };
-        return m[e.code] || (e.message || 'Erro desconhecido.');
-    }
-};
+                    // Bind login buttons
+                    document.getElementById('loginBtn').addEventListener('click', function() { s.login(); });
+                    document.getElementById('registerBtn').addEventListener('click', function() { s.register(); });
+                    document.getElementById('logoutBtn').addEventListener('click', function() { s.logout(); });
 
-// ==================== INICIAR ====================
-window.APP = APP;
+                    // Bind toolbar buttons
+                    document.getElementById('runBtn').addEventListener('click', function() { s.runCode(); });
+                    document.getElementById('downloadBtn').addEventListener('click', function() { s.downloadFile(); });
+                    document.getElementById('aiBtn').addEventListener('click', function() { s.switchRightTab('ai'); });
+                    document.getElementById('membersBtn').addEventListener('click', function() { s.showMembers(); });
+                    document.getElementById('roomBadge').addEventListener('click', function() { s.copyRoomLink(); });
+                    document.getElementById('newProjectBtn').addEventListener('click', function() { s.openProjectModal(); });
+                    document.getElementById('newFileBtn').addEventListener('click', function() { s.openFileModal(); });
+                    document.getElementById('toggleExplorerBtn').addEventListener('click', function() { s.toggleExplorer(); });
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(function(){ APP.init(); }, 100);
-} else {
-    document.addEventListener('DOMContentLoaded', function(){
-        setTimeout(function(){ APP.init(); }, 100);
-    });
-}
+                    // Bind modal buttons
+                    document.getElementById('confirmProjectBtn').addEventListener('click', function() { s.createProject(); });
+                    document.getElementById('cancelProjectBtn').addEventListener('click', function() { s.closeModal('projectModal'); });
+                    document.getElementById('confirmFileBtn').addEventListener('click', function() { s.createFile(); });
+                    document.getElementById('cancelFileBtn').addEventListener('click', function() { s.closeModal('fileModal'); });
+                    document.getElementById('closeMembersBtn').addEventListener('click', function() { s.closeModal('membersModal'); });
 
-})();
-</script>
+                    // Bind terms
+                    document.getElementById('termsLink').addEventListener('click', function() { s.toast('Termos: Use com responsabilidade.'); });
+                    document.getElementById('lgpdLink').addEventListener('click', function() { s.toast('LGPD: Seus dados estão protegidos.'); });
+
+                    // Join room checkbox
+                    document.getElementById('joinRoomCheck').addEventListener('change', function() {
+                        document.getElementById('roomGroup').style.display = this.checked ? 'block' : 'none';
+                    });
+
+                    // Language select
+                    document.getElementById('langSelect').addEventListener('change', function() {
+                        if (s.currentFileId) s.changeFileLanguage(this.value);
+                    });
+
+                    // Right tabs
+                    document.querySelectorAll('.right-tab').forEach(function(tab) {
+                        tab.addEventListener('click', function() {
+                            s.switchRightTab(this.getAttribute('data-tab'));
+                        });
+                    });
+
+                    // Analyze button
+                    document.getElementById('analyzeBtn').addEventListener('click', function() { s.runStaticAnalysis(); });
+
+                    // IA Chat
+                    document.getElementById('iaSendBtn').addEventListener('click', function() { s.sendIAMessage(); });
+                    document.getElementById('iaChatInput').addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            s.sendIAMessage();
+                        }
+                    });
+                    document.getElementById('iaChatInput').addEventListener('input', function() {
+                        this.style.height = 'auto';
+                        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+                    });
+
+                    // Quick action buttons
+                    document.querySelectorAll('.qa-btn').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            s.quickAIAction(this.getAttribute('data-action'));
+                        });
+                    });
+
+                    // Close modals on outside click
+                    document.querySelectorAll('.modal').forEach(function(m) {
+                        m.addEventListener('click', function(e) {
+                            if (e.target === m) m.classList.remove('show');
+                        });
+                    });
+
+                    // Keyboard shortcuts
+                    document.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape') {
+                            document.querySelectorAll('.modal.show').forEach(function(m) { m.classList.remove(
+                                    'show'); });
+                        }
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            s.runCode();
+                        }
+                        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                            e.preventDefault();
+                            s.syncToFirebase();
+                            s.toast('💾 Salvo!');
+                        }
+                    });
+
+                    // Auth state listener
+                    auth.onAuthStateChanged(function(user) {
+                        if (user) {
+                            s.user = user;
+                            console.log('👤 Usuário autenticado:', user.email);
+                            var p = new URLSearchParams(location.search);
+                            var r = p.get('room');
+                            if (r) {
+                                s.joinRoom(r);
+                            }
+                        }
+                    });
+
+                    // Setup splitter
+                    this.setupSplitter();
+
+                    // Safety timeout
+                    setTimeout(function() {
+                        document.getElementById('loadingOverlay').classList.remove('show');
+                    }, 10000);
+
+                    console.log('✅ CodeCollab Pro inicializado!');
+                },
+
+                // ==================== AUTH ====================
+                login: function() {
+                    if (!document.getElementById('lgpdCheck').checked) {
+                        this.showError('Aceite os Termos e LGPD para continuar.');
+                        return;
+                    }
+                    var email = document.getElementById('email').value.trim();
+                    var pass = document.getElementById('password').value;
+                    if (!email || !pass) {
+                        this.showError('Preencha email e senha.');
+                        return;
+                    }
+                    this.showLoading(true);
+                    var s = this;
+                    auth.signInWithEmailAndPassword(email, pass)
+                        .then(function(r) {
+                            s.user = r.user;
+                            var jc = document.getElementById('joinRoomCheck').checked;
+                            var rv = document.getElementById('roomIdInput').value.trim();
+                            if (jc && rv) return s.joinRoom(rv);
+                            return s.createRoom();
+                        })
+                        .catch(function(e) { s.showError(s.translateError(e)); })
+                        .finally(function() { s.showLoading(false); });
+                },
+
+                register: function() {
+                    if (!document.getElementById('lgpdCheck').checked) {
+                        this.showError('Aceite os Termos e LGPD para continuar.');
+                        return;
+                    }
+                    var email = document.getElementById('email').value.trim();
+                    var pass = document.getElementById('password').value;
+                    if (!email || !pass) {
+                        this.showError('Preencha email e senha.');
+                        return;
+                    }
+                    if (pass.length < 6) {
+                        this.showError('Senha deve ter no mínimo 6 caracteres.');
+                        return;
+                    }
+                    this.showLoading(true);
+                    var s = this;
+                    auth.createUserWithEmailAndPassword(email, pass)
+                        .then(function(r) {
+                            s.user = r.user;
+                            return s.createRoom();
+                        })
+                        .catch(function(e) { s.showError(s.translateError(e)); })
+                        .finally(function() { s.showLoading(false); });
+                },
+
+                logout: function() {
+                    this.showLoading(true);
+                    var s = this;
+                    if (this.unsubscribe) { this.unsubscribe();
+                        this.unsubscribe = null; }
+                    if (this.editor) { this.editor.toTextArea();
+                        this.editor = null; }
+                    if (this.previewUrl) { URL.revokeObjectURL(this.previewUrl);
+                        this.previewUrl = null; }
+                    auth.signOut().then(function() {
+                        s.user = null;
+                        s.roomId = null;
+                        s.isOwner = false;
+                        s.projects = [];
+                        s.currentProjectId = null;
+                        s.currentFileId = null;
+                        s.openTabs = [];
+                        history.pushState({}, '', location.pathname);
+                        document.getElementById('loginPage').style.display = 'flex';
+                        document.getElementById('editorPage').style.display = 'none';
+                        s.showLoading(false);
+                        console.log('👋 Logout realizado');
+                    });
+                },
+
+                // ==================== ROOMS ====================
+                createRoom: function() {
+                    var s = this;
+                    var initialProject = {
+                        id: 'proj_' + Date.now(),
+                        name: 'Projeto Inicial',
+                        description: 'Projeto padrão criado automaticamente',
+                        files: [
+                            { id: 'file_' + Date.now(), name: 'index.html', language: 'html',
+                                content: DEFAULT_FILES['index.html'] },
+                            { id: 'file_' + Date.now() + 1, name: 'style.css', language: 'css',
+                                content: DEFAULT_FILES['style.css'] },
+                            { id: 'file_' + Date.now() + 2, name: 'script.js', language: 'javascript',
+                                content: DEFAULT_FILES['script.js'] }
+                        ]
+                    };
+
+                    return db.collection('rooms').add({
+                            ownerId: this.user.uid,
+                            ownerEmail: this.user.email,
+                            members: [this.user.uid],
+                            memberEmails: { [this.user.uid]: this.user.email },
+                            projects: [initialProject],
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        })
+                        .then(function(doc) {
+                            s.roomId = doc.id;
+                            s.isOwner = true;
+                            s.projects = [initialProject];
+                            history.pushState({}, '', '?room=' + doc.id);
+                            s.showEditor();
+                            s.toast('✅ Sala criada com sucesso!');
+                            console.log('🏠 Sala criada:', doc.id);
+                        })
+                        .catch(function(e) {
+                            s.showError('Erro ao criar sala: ' + e.message);
+                            console.error('Room creation error:', e);
+                        });
+                },
+
+                joinRoom: function(id) {
+                    var s = this;
+                    return db.collection('rooms').doc(id).get()
+                        .then(function(doc) {
+                            if (!doc.exists) {
+                                s.showError('Sala não encontrada.');
+                                throw new Error('nf');
+                            }
+                            var d = doc.data();
+                            if (!d.members.includes(s.user.uid)) {
+                                var update = {
+                                    members: firebase.firestore.FieldValue.arrayUnion(s.user.uid)
+                                };
+                                update['memberEmails.' + s.user.uid] = s.user.email;
+                                return db.collection('rooms').doc(id).update(update).then(function() { return d; });
+                            }
+                            return d;
+                        })
+                        .then(function(d) {
+                            if (!d) return;
+                            s.roomId = id;
+                            s.isOwner = d.ownerId === s.user.uid;
+                            s.projects = d.projects || [];
+                            history.pushState({}, '', '?room=' + id);
+                            s.showEditor();
+                            s.toast('✅ Entrou na sala!');
+                            console.log('🚪 Entrou na sala:', id);
+                        })
+                        .catch(function(e) {
+                            if (e.message !== 'nf') s.showError('Erro ao entrar na sala.');
+                            console.error('Join room error:', e);
+                        });
+                },
+
+                // ==================== EDITOR ====================
+                showEditor: function() {
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('editorPage').style.display = 'flex';
+                    document.getElementById('roomBadge').textContent = 'Sala: ' + (this.roomId ? this.roomId.substring(0,
+                        10) + '...' : '---');
+
+                    var s = this;
+                    if (!this.editor) {
+                        setTimeout(function() { s.initEditor(); }, 300);
+                    }
+                    this.listenRoom();
+                    this.renderExplorer();
+
+                    // Abrir primeiro arquivo do primeiro projeto
+                    if (this.projects.length > 0 && this.projects[0].files.length > 0) {
+                        this.currentProjectId = this.projects[0].id;
+                        this.openFile(this.projects[0].files[0].id);
+                    }
+                },
+
+                initEditor: function() {
+                    if (this.editor) return;
+                    var ta = document.getElementById('codeEditor');
+                    if (!ta) {
+                        setTimeout(this.initEditor.bind(this), 100);
+                        return;
+                    }
+
+                    this.editor = CodeMirror.fromTextArea(ta, {
+                        mode: 'htmlmixed',
+                        theme: 'monokai',
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        autoCloseTags: true,
+                        autoCloseBrackets: true,
+                        matchBrackets: true,
+                        indentUnit: 2,
+                        tabSize: 2
+                    });
+
+                    var s = this;
+                    this.editor.on('change', function() {
+                        if (s.currentFileId) {
+                            clearTimeout(s.syncTimer);
+                            s.syncTimer = setTimeout(function() { s.syncToFirebase(); }, 800);
+                        }
+                    });
+
+                    this.editor.getWrapperElement().style.fontSize = '14px';
+                    console.log('✅ CodeMirror inicializado');
+                },
+
+                listenRoom: function() {
+                    var s = this;
+                    if (this.unsubscribe) this.unsubscribe();
+
+                    this.unsubscribe = db.collection('rooms').doc(this.roomId)
+                        .onSnapshot(function(doc) {
+                            if (!doc.exists) {
+                                s.toast('Sala excluída!');
+                                s.logout();
+                                return;
+                            }
+                            var d = doc.data();
+                            if (!d.members.includes(s.user.uid)) {
+                                alert('Acesso revogado.');
+                                s.logout();
+                                return;
+                            }
+                            if (d.projects && JSON.stringify(d.projects) !== JSON.stringify(s.projects)) {
+                                s.projects = d.projects;
+                                s.renderExplorer();
+                                if (s.currentFileId) {
+                                    var found = false;
+                                    s.projects.forEach(function(p) {
+                                        p.files.forEach(function(f) {
+                                            if (f.id === s.currentFileId) found = true;
+                                        });
+                                    });
+                                    if (!found) {
+                                        s.currentFileId = null;
+                                        if (s.editor) s.editor.setValue('');
+                                        s.renderTabs();
+                                    }
+                                }
+                            }
+                        }, function(err) {
+                            console.error('Listen error:', err);
+                        });
+                },
+
+                syncToFirebase: function() {
+                    if (!this.roomId || !this.currentFileId || !this.editor) return;
+                    var content = this.editor.getValue();
+                    var projects = JSON.parse(JSON.stringify(this.projects));
+                    var updated = false;
+                    projects.forEach(function(p) {
+                        p.files.forEach(function(f) {
+                            if (f.id === APP.currentFileId && f.content !== content) {
+                                f.content = content;
+                                updated = true;
+                            }
+                        });
+                    });
+                    if (updated) {
+                        db.collection('rooms').doc(this.roomId).update({ projects: projects })
+                            .catch(function(err) { console.error('Sync error:', err); });
+                        this.projects = projects;
+                    }
+                },
+
+                // ==================== PROJECTS ====================
+                openProjectModal: function() {
+                    document.getElementById('projectNameInput').value = '';
+                    document.getElementById('projectDescInput').value = '';
+                    document.getElementById('projectModal').classList.add('show');
+                    document.getElementById('projectNameInput').focus();
+                },
+
+                createProject: function() {
+                    var name = document.getElementById('projectNameInput').value.trim();
+                    if (!name) { this.toast('Digite um nome para o projeto!'); return; }
+                    var desc = document.getElementById('projectDescInput').value.trim();
+                    var newProject = {
+                        id: 'proj_' + Date.now(),
+                        name: name,
+                        description: desc,
+                        files: [{
+                            id: 'file_' + Date.now(),
+                            name: 'index.html',
+                            language: 'html',
+                            content: DEFAULT_FILES['index.html']
+                        }]
+                    };
+                    var projects = JSON.parse(JSON.stringify(this.projects));
+                    projects.push(newProject);
+                    var s = this;
+                    db.collection('rooms').doc(this.roomId).update({ projects: projects })
+                        .then(function() {
+                            s.projects = projects;
+                            s.closeModal('projectModal');
+                            s.renderExplorer();
+                            s.toast('✅ Projeto "' + name + '" criado!');
+                        })
+                        .catch(function(e) { s.toast('❌ Erro ao criar projeto'); });
+                },
+
+                deleteProject: function(projectId) {
+                    if (!confirm('Excluir este projeto e todos os seus arquivos?')) return;
+                    var projects = this.projects.filter(function(p) { return p.id !== projectId; });
+                    var s = this;
+                    db.collection('rooms').doc(this.roomId).update({ projects: projects })
+                        .then(function() {
+                            s.projects = projects;
+                            if (s.currentProjectId === projectId) {
+                                s.currentProjectId = null;
+                                s.currentFileId = null;
+                                if (s.editor) s.editor.setValue('');
+                                s.openTabs = [];
+                                s.renderTabs();
+                            }
+                            s.renderExplorer();
+                            s.toast('🗑️ Projeto excluído');
+                        });
+                },
+
+                renameProject: function(projectId) {
+                    var proj = this.projects.find(function(p) { return p.id === projectId; });
+                    if (!proj) return;
+                    var name = prompt('Novo nome para o projeto:', proj.name);
+                    if (!name || name === proj.name) return;
+                    var projects = JSON.parse(JSON.stringify(this.projects));
+                    var p = projects.find(function(pr) { return pr.id === projectId; });
+                    if (p) p.name = name;
+                    var s = this;
+                    db.collection('rooms').doc(this.roomId).update({ projects: projects })
+                        .then(function() {
+                            s.projects = projects;
+                            s.renderExplorer();
+                            if (s.currentProjectId === projectId) {
+                                document.getElementById('breadcrumbProject').textContent = name;
+                            }
+                            s.toast('✏️ Projeto renomeado!');
+                        });
+                },
+
+                // ==================== FILES ====================
+                openFileModal: function() {
+                    if (!this.currentProjectId) {
+                        this.toast('Selecione um projeto primeiro!');
+                        return;
+                    }
+                    document.getElementById('fileNameInput').value = '';
+                    document.getElementById('fileModal').classList.add('show');
+                    document.getElementById('fileNameInput').focus();
+                },
+
+                createFile: function() {
+                    if (!this.currentProjectId) return;
+                    var name = document.getElementById('fileNameInput').value.trim();
+                    if (!name) { this.toast('Digite um nome para o arquivo!'); return; }
+                    var ext = name.split('.').pop().toLowerCase();
+                    var langMap = { html: 'html', htm: 'html', css: 'css', js: 'javascript', py: 'python' };
+                    var language = langMap[ext] || 'javascript';
+                    var projects = JSON.parse(JSON.stringify(this.projects));
+                    var proj = projects.find(function(p) { return p.id === APP.currentProjectId; });
+                    if (!proj) return;
+                    if (proj.files.find(function(f) { return f.name === name; })) {
+                        this.toast('Já existe um arquivo com esse nome!');
+                        return;
+                    }
+                    var newFile = {
+                        id: 'file_' + Date.now(),
+                        name: name,
+                        language: language,
+                        content: ''
+                    };
+                    proj.files.push(newFile);
+                    var s = this;
+                    db.collection('rooms').doc(this.roomId).update({ projects: projects })
+                        .then(function() {
+                            s.projects = projects;
+                            s.closeModal('fileModal');
+                            s.renderExplorer();
+                            s.openFile(newFile.id);
+                            s.toast('✅ Arquivo "' + name + '" criado!');
+                        });
+                },
+
+                deleteFile: function(fileId) {
+                    if (!confirm('Excluir este arquivo?')) return;
+                    var projects = JSON.parse(JSON.stringify(this.projects));
+                    var proj = projects.find(function(p) { return p.id === APP.currentProjectId; });
+                    if (!proj) return;
+                    proj.files = proj.files.filter(function(f) { return f.id !== fileId; });
+                    var s = this;
+                    db.collection('rooms').doc(this.roomId).update({ projects: projects })
+                        .then(function() {
+                            s.projects = projects;
+                            if (s.currentFileId === fileId) {
+                                s.openTabs = s.openTabs.filter(function(t) { return t !== fileId; });
+                                if (s.openTabs.length > 0) {
+                                    s.openFile(s.openTabs[s.openTabs.length - 1]);
+                                } else {
+                                    s.currentFileId = null;
+                                    if (s.editor) s.editor.setValue('');
+                                }
+                            }
+                            s.renderExplorer();
+                            s.renderTabs();
+                            s.toast('🗑️ Arquivo excluído');
+                        });
+                },
+
+                openFile: function(fileId) {
+                    var s = this,
+                        found = false;
+                    this.projects.forEach(function(p) {
+                        p.files.forEach(function(f) {
+                            if (f.id === fileId) {
+                                found = true;
+                                s.currentProjectId = p.id;
+                                s.currentFileId = f.id;
+                                if (s.editor) s.editor.setValue(f.content || '');
+                                var modeMap = { html: 'htmlmixed', javascript: 'javascript', css: 'css',
+                                    python: 'python' };
+                                if (s.editor) s.editor.setOption('mode', modeMap[f.language] || 'javascript');
+                                document.getElementById('langSelect').value = f.language;
+                                if (s.openTabs.indexOf(f.id) === -1) s.openTabs.push(f.id);
+                                document.getElementById('breadcrumbProject').textContent = p.name;
+                                document.getElementById('breadcrumbFile').textContent = f.name;
+                                if (f.language === 'html') s.updatePreview(f.content);
+                            }
+                        });
+                    });
+                    if (found) {
+                        this.renderExplorer();
+                        this.renderTabs();
+                    }
+                },
+
+                closeTab: function(fileId) {
+                    this.openTabs = this.openTabs.filter(function(t) { return t !== fileId; });
+                    if (this.currentFileId === fileId) {
+                        if (this.openTabs.length > 0) {
+                            this.openFile(this.openTabs[this.openTabs.length - 1]);
+                        } else {
+                            this.currentFileId = null;
+                            if (this.editor) this.editor.setValue('');
+                        }
+                    }
+                    this.renderTabs();
+                },
+
+                changeFileLanguage: function(lang) {
+                    if (!this.currentFileId || !this.editor) return;
+                    var modeMap = { html: 'htmlmixed', javascript: 'javascript', css: 'css', python: 'python' };
+                    this.editor.setOption('mode', modeMap[lang] || 'javascript');
+                    var projects = JSON.parse(JSON.stringify(this.projects));
+                    projects.forEach(function(p) {
+                        p.files.forEach(function(f) {
+                            if (f.id === APP.currentFileId) f.language = lang;
+                        });
+                    });
+                    this.projects = projects;
+                    this.syncToFirebase();
+                },
+
+                // ==================== RENDER ====================
+                renderExplorer: function() {
+                    var container = document.getElementById('explorerContent');
+                    if (!this.projects || this.projects.length === 0) {
+                        container.innerHTML =
+                            '<div style="padding:20px;text-align:center;color:var(--text2);font-size:11px">Nenhum projeto ainda</div>';
+                        return;
+                    }
+                    var s = this;
+                    container.innerHTML = this.projects.map(function(proj) {
+                        var filesHtml = proj.files.map(function(file) {
+                            var icons = { html: '🌐', css: '🎨', javascript: '📜', python: '🐍' };
+                            var icon = icons[file.language] || '📄';
+                            return '<div class="file-item' + (s.currentFileId === file.id ? ' active' :
+                                '') + '" data-fileid="' + file.id + '">' +
+                                '<span>' + icon + '</span>' +
+                                '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+                                file.name + '</span>' +
+                                '<button class="tbtn" style="padding:0 4px;font-size:9px;min-height:18px" data-action="deletefile" data-fileid="' +
+                                file.id + '">🗑️</button>' +
+                                '</div>';
+                        }).join('');
+                        return '<div class="project-section">' +
+                            '<div class="project-folder' + (s.currentProjectId === proj.id ? ' active' : '') +
+                            '" data-projectid="' + proj.id + '">' +
+                            '<span>📁</span>' +
+                            '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + proj
+                            .name + '</span>' +
+                            '<span class="actions">' +
+                            '<button class="tbtn" style="padding:0 4px;font-size:9px;min-height:18px" data-action="renameproject" data-projectid="' +
+                            proj.id + '">✏️</button>' +
+                            '<button class="tbtn" style="padding:0 4px;font-size:9px;min-height:18px;color:#f44" data-action="deleteproject" data-projectid="' +
+                            proj.id + '">🗑️</button>' +
+                            '</span>' +
+                            '</div>' +
+                            '<div>' + filesHtml + '</div>' +
+                            '</div>';
+                    }).join('');
+
+                    // Add event listeners
+                    container.querySelectorAll('.file-item').forEach(function(el) {
+                        el.addEventListener('click', function() {
+                            s.openFile(this.getAttribute('data-fileid'));
+                        });
+                    });
+                    container.querySelectorAll('.project-folder').forEach(function(el) {
+                        el.addEventListener('click', function(e) {
+                            if (!e.target.closest('button')) {
+                                s.currentProjectId = this.getAttribute('data-projectid');
+                                s.renderExplorer();
+                            }
+                        });
+                    });
+                    container.querySelectorAll('[data-action="deletefile"]').forEach(function(btn) {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            s.deleteFile(this.getAttribute('data-fileid'));
+                        });
+                    });
+                    container.querySelectorAll('[data-action="renameproject"]').forEach(function(btn) {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            s.renameProject(this.getAttribute('data-projectid'));
+                        });
+                    });
+                    container.querySelectorAll('[data-action="deleteproject"]').forEach(function(btn) {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            s.deleteProject(this.getAttribute('data-projectid'));
+                        });
+                    });
+                },
+
+                renderTabs: function() {
+                    var container = document.getElementById('tabsContainer');
+                    if (!this.openTabs || this.openTabs.length === 0) {
+                        container.innerHTML = '';
+                        return;
+                    }
+                    var s = this;
+                    container.innerHTML = this.openTabs.map(function(fileId) {
+                        var file = null;
+                        s.projects.forEach(function(p) {
+                            p.files.forEach(function(f) { if (f.id === fileId) file = f; });
+                        });
+                        if (!file) return '';
+                        var icons = { html: '🌐', css: '🎨', javascript: '📜', python: '🐍' };
+                        var icon = icons[file.language] || '📄';
+                        return '<div class="tab' + (s.currentFileId === fileId ? ' active' : '') +
+                            '" data-fileid="' + fileId + '">' +
+                            '<span>' + icon + '</span>' +
+                            '<span>' + file.name + '</span>' +
+                            '<span class="close-tab" data-fileid="' + fileId + '">×</span>' +
+                            '</div>';
+                    }).join('');
+
+                    container.querySelectorAll('.tab').forEach(function(tab) {
+                        tab.addEventListener('click', function(e) {
+                            if (!e.target.classList.contains('close-tab')) {
+                                s.openFile(this.getAttribute('data-fileid'));
+                            }
+                        });
+                    });
+                    container.querySelectorAll('.close-tab').forEach(function(btn) {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            s.closeTab(this.getAttribute('data-fileid'));
+                        });
+                    });
+                },
+
+                // ==================== RIGHT TABS ====================
+                switchRightTab: function(tab) {
+                    document.querySelectorAll('.right-tab').forEach(function(btn) { btn.classList.remove('active'); });
+                    document.querySelector('.right-tab[data-tab="' + tab + '"]').classList.add('active');
+                    document.querySelectorAll('.right-tab-content').forEach(function(c) { c.classList.remove(
+                        'active'); });
+                    document.getElementById('rtcontent-' + tab).classList.add('active');
+                    if (tab === 'ai') {
+                        var msgs = document.getElementById('iaChatMessages');
+                        msgs.scrollTop = msgs.scrollHeight;
+                    }
+                },
+
+                // ==================== CODE EXECUTION ====================
+                runCode: function() {
+                    if (!this.editor) { this.toast('Aguarde o editor carregar...'); return; }
+                    var code = this.editor.getValue();
+                    var lang = document.getElementById('langSelect').value;
+
+                    if (lang === 'html') {
+                        this.updatePreview(code);
+                        this.switchRightTab('preview');
+                        return;
+                    }
+
+                    this.switchRightTab('console');
+                    var c = document.getElementById('console');
+                    c.className = '';
+                    c.textContent = 'Executando...\n';
+
+                    if (lang === 'javascript') {
+                        try {
+                            var output = '';
+                            var oldLog = console.log;
+                            console.log = function() {
+                                for (var i = 0; i < arguments.length; i++) output += arguments[i] + ' ';
+                                output += '\n';
+                            };
+                            eval(code);
+                            console.log = oldLog;
+                            c.textContent = output || '✅ Código executado com sucesso!';
+                        } catch (e) {
+                            c.textContent = '❌ Erro: ' + e.message;
+                            c.className = 'error';
+                        }
+                    } else if (lang === 'css') {
+                        c.textContent = 'ℹ️ CSS não é executável. Use HTML para preview.';
+                        c.className = 'warn';
+                    } else {
+                        c.textContent = 'ℹ️ Use HTML ou JavaScript para execução local.';
+                        c.className = 'warn';
+                    }
+                },
+
+                updatePreview: function(code) {
+                    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+                    this.previewUrl = URL.createObjectURL(new Blob([code], { type: 'text/html' }));
+                    document.getElementById('previewFrame').src = this.previewUrl;
+                },
+
+                // ==================== IA CHAT ====================
+                sendIAMessage: function() {
+                    var input = document.getElementById('iaChatInput');
+                    var text = input.value.trim();
+                    if (!text) return;
+                    this.addIAMessage(text, 'user');
+                    input.value = '';
+                    input.style.height = 'auto';
+                    this.processIARequest(text);
+                },
+
+                addIAMessage: function(text, role) {
+                    var messages = document.getElementById('iaChatMessages');
+                    var div = document.createElement('div');
+                    div.className = 'msg ' + role;
+                    var avatar = document.createElement('div');
+                    avatar.className = 'msg-avatar';
+                    avatar.textContent = role === 'ai' ? '✦' : '👤';
+                    var bubble = document.createElement('div');
+                    bubble.className = 'msg-bubble';
+                    bubble.innerHTML = this.formatIAMessage(text);
+                    div.appendChild(avatar);
+                    div.appendChild(bubble);
+                    messages.appendChild(div);
+                    messages.scrollTop = messages.scrollHeight;
+                },
+
+                formatIAMessage: function(text) {
+                    text = text.replace(/```(\w+)?\n?([\s\S]*?)```/g, function(m, lang, code) {
+                        return '<pre>' + code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+                    });
+                    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+                    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    text = text.replace(/\n/g, '<br>');
+                    return text;
+                },
+
+                showIATyping: function() {
+                    var messages = document.getElementById('iaChatMessages');
+                    var div = document.createElement('div');
+                    div.className = 'msg ai';
+                    div.id = 'ia-typing';
+                    div.innerHTML =
+                        '<div class="msg-avatar">✦</div><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+                    messages.appendChild(div);
+                    messages.scrollTop = messages.scrollHeight;
+                },
+
+                hideIATyping: function() {
+                    var t = document.getElementById('ia-typing');
+                    if (t) t.remove();
+                },
+
+                processIARequest: function(userMessage) {
+                    var btn = document.getElementById('iaSendBtn');
+                    btn.disabled = true;
+                    this.showIATyping();
+                    var s = this;
+                    setTimeout(function() {
+                        s.hideIATyping();
+                        var code = s.editor ? s.editor.getValue() : '';
+                        var response = s.generateIAResponse(userMessage, code);
+                        s.addIAMessage(response, 'ai');
+                        btn.disabled = false;
+                    }, 800 + Math.random() * 1200);
+                },
+
+                generateIAResponse: function(message, code) {
+                    var msg = message.toLowerCase();
+                    var safeCode = code
+                        .replace(/apiKey\s*:\s*["'][^"']+["']/g, 'apiKey: "[REMOVIDO]"')
+                        .replace(/authDomain\s*:\s*["'][^"']+["']/g, 'authDomain: "[REMOVIDO]"')
+                        .replace(/projectId\s*:\s*["'][^"']+["']/g, 'projectId: "[REMOVIDO]"')
+                        .replace(/appId\s*:\s*["'][^"']+["']/g, 'appId: "[REMOVIDO]"')
+                        .substring(0, 3000);
+
+                    if (msg.includes('analise') || msg.includes('analisar')) return this.getAnalysisResponse(code);
+                    if (msg.includes('erro') || msg.includes('bug') || msg.includes('crítico')) return this
+                        .getErrorsResponse(code);
+                    if (msg.includes('segurança') || msg.includes('vulnerabilidade')) return this.getSecurityResponse(
+                        code);
+                    if (msg.includes('melhoria') || msg.includes('melhorar') || msg.includes('otimizar')) return this
+                        .getImprovementsResponse();
+                    if (msg.includes('performance') || msg.includes('rápido') || msg.includes('lento')) return this
+                        .getPerformanceResponse(code);
+                    if (msg.includes('refatorar') || msg.includes('refatoração')) return this.getRefactorResponse();
+
+                    return '📝 **Como posso ajudar?**\n\n' +
+                        'Use os atalhos acima ou pergunte sobre:\n' +
+                        '• **Analisar código** - diagnóstico completo\n' +
+                        '• **Erros críticos** - bugs e falhas\n' +
+                        '• **Segurança** - vulnerabilidades\n' +
+                        '• **Melhorias** - otimizações\n' +
+                        '• **Performance** - velocidade\n' +
+                        '• **Refatorar** - código limpo';
+                },
+
+                getAnalysisResponse: function(code) {
+                    var lines = code.split('\n');
+                    var issues = [];
+                    lines.forEach(function(line, i) {
+                        var n = i + 1;
+                        if (/AIza[A-Za-z0-9_-]{35}/.test(line)) issues.push(
+                            '🔴 **CRÍTICO** (linha ' + n + '): Credencial Firebase exposta!');
+                        if (/eval\s*\(/.test(line)) issues.push('🔴 **CRÍTICO** (linha ' + n +
+                            '): eval() - risco de XSS');
+                        if (/innerHTML\s*=/.test(line) && !/sanitize|escape/.test(line)) issues.push(
+                            '🟡 **AVISO** (linha ' + n + '): innerHTML sem sanitização');
+                        if (/console\.log/.test(line)) issues.push('💡 **INFO** (linha ' + n +
+                            '): console.log em produção');
+                    });
+                    if (code.includes('allow read, write: if true')) issues.push('🔴 **CRÍTICO**: Firestore público!');
+                    var r = '📊 **Análise Completa**\n\n';
+                    r += '**Métricas:**\n• Linhas: ' + lines.length + '\n• Tamanho: ' + (code.length / 1024).toFixed(1) +
+                        ' KB\n• Funções: ' + (code.match(/function|=>/g) || []).length + '\n\n';
+                    r += issues.length > 0 ? '**Problemas Encontrados:**\n' + issues.join('\n') :
+                        '✅ Nenhum problema crítico detectado.';
+                    return r;
+                },
+
+                getErrorsResponse: function(code) {
+                    var errors = [];
+                    code.split('\n').forEach(function(line, i) {
+                        if (/AIza[A-Za-z0-9_-]{35}/.test(line)) errors.push('Linha ' + (i + 1) +
+                            ': Chave Firebase exposta');
+                        if (/sk_live_/.test(line)) errors.push('Linha ' + (i + 1) + ': Chave Stripe exposta');
+                        if (/eval\s*\(/.test(line)) errors.push('Linha ' + (i + 1) + ': eval() detectado');
+                    });
+                    return errors.length === 0 ? '✅ Nenhum erro crítico encontrado.' : '🚨 **Erros Críticos:**\n\n' +
+                        errors.map(function(e) { return '• ' + e; }).join('\n');
+                },
+
+                getSecurityResponse: function(code) {
+                    return '🔐 **Análise de Segurança**\n\n' +
+                        '• ' + (code.includes('allow read, write: if true') ? '❌' : '✅') + ' Firestore Rules\n' +
+                        '• ' + (code.includes('eval(') ? '❌' : '✅') + ' Uso de eval()\n' +
+                        '• ' + (code.includes('innerHTML') && !code.includes('sanitize') ? '⚠️' : '✅') +
+                        ' Sanitização HTML\n\n' +
+                        '**Recomendações:**\n• Use variáveis de ambiente\n• Implemente Security Rules\n• Sanitize inputs\n• Use HTTPS';
+                },
+
+                getImprovementsResponse: function() {
+                    return '✨ **Top 5 Melhorias:**\n\n' +
+                        '1. **Firestore Rules** - restrinja acesso\n' +
+                        '2. **Error Handling** - try-catch em chamadas\n' +
+                        '3. **Debounce** - reduza writes no Firestore\n' +
+                        '4. **Modularização** - funções menores e reutilizáveis\n' +
+                        '5. **TypeScript** - mais segurança e autocomplete';
+                },
+
+                getPerformanceResponse: function(code) {
+                    var lines = code.split('\n').length;
+                    return '⚡ **Performance**\n\n' +
+                        '• Linhas: ' + lines + '\n• Tamanho: ' + (code.length / 1024).toFixed(1) + ' KB\n\n' +
+                        '**Sugestões:**\n• Minifique CSS/JS em produção\n• Lazy loading para componentes\n• Cache com Service Worker\n• Batch writes no Firestore';
+                },
+
+                getRefactorResponse: function() {
+                    return '🔧 **Refatoração**\n\n' +
+                        'Para melhorar a estrutura:\n• Extraia funções reutilizáveis\n• Use constantes para valores mágicos\n• Implemente padrão Observer\n• Separe UI da lógica de negócio\n\nQuer um exemplo específico?';
+                },
+
+                quickAIAction: function(type) {
+                    this.switchRightTab('ai');
+                    var prompts = {
+                        analise_geral: 'Faça uma análise completa do código.',
+                        erros_criticos: 'Liste apenas os erros críticos.',
+                        seguranca: 'Analise vulnerabilidades de segurança.',
+                        melhorias: 'Sugira as 5 melhorias mais impactantes.',
+                        performance: 'Analise a performance e sugira otimizações.',
+                        refatorar: 'Sugira como refatorar o código.'
+                    };
+                    var prompt = prompts[type] || type;
+                    this.addIAMessage(prompt, 'user');
+                    this.processIARequest(prompt);
+                },
+
+                // ==================== STATIC ANALYSIS ====================
+                runStaticAnalysis: function() {
+                    this.switchRightTab('analysis');
+                    var code = this.editor ? this.editor.getValue() : '';
+                    if (!code) {
+                        document.getElementById('analysisContent').innerHTML =
+                            '<div class="empty-state"><div class="icon">📝</div><p style="font-size:12px">Nenhum código no editor para analisar</p></div>';
+                        return;
+                    }
+
+                    var lines = code.split('\n');
+                    var errors = [],
+                        warnings = [],
+                        infos = [],
+                        oks = [];
+
+                    lines.forEach(function(line, i) {
+                        var n = i + 1;
+                        if (/AIza[A-Za-z0-9_-]{35}/.test(line)) errors.push({ text: 'Credencial Firebase exposta',
+                            line: 'linha ' + n });
+                        if (/sk_live_/.test(line)) errors.push({ text: 'Chave secreta Stripe exposta',
+                        line: 'linha ' + n });
+                        if (/eval\s*\(/.test(line)) errors.push({ text: 'Uso de eval() - risco de XSS',
+                            line: 'linha ' + n });
+                        if (/innerHTML\s*=/.test(line) && !/sanitize|escape|textContent/.test(line)) warnings.push(
+                            { text: 'innerHTML sem sanitização', line: 'linha ' + n });
+                        if (/console\.log/.test(line)) infos.push({ text: 'console.log - remover em produção',
+                            line: 'linha ' + n });
+                        if (/TODO|FIXME|HACK/.test(line)) infos.push({ text: 'Marcador pendente: ' + line.trim()
+                                .substring(0, 50), line: 'linha ' + n });
+                        if (/try\s*\{/.test(line) && code.includes('catch')) oks.push({ text: 'Try-catch implementado',
+                            line: 'linha ' + n });
+                    });
+
+                    if (code.includes('allow read, write: if true')) errors.push({ text: 'Firestore aberto para leitura/escrita pública!',
+                        line: 'regras' });
+                    if (code.includes('sandbox="allow-scripts"') && code.includes('allow-same-origin')) oks.push({ text: 'iframe com sandbox bem configurado',
+                        line: 'global' });
+                    if (code.includes('LGPD') || code.includes('lgpd')) oks.push({ text: 'Conformidade LGPD mencionada',
+                        line: 'global' });
+
+                    var container = document.getElementById('analysisContent');
+                    var html = '';
+
+                    // Métricas
+                    html += '<div class="analysis-card"><h4>📊 Métricas do Código</h4><div class="metric-grid">';
+                    html += '<div class="metric-box"><div class="metric-val">' + lines.length +
+                        '</div><div class="metric-lbl">Linhas</div></div>';
+                    html += '<div class="metric-box"><div class="metric-val">' + (code.length / 1024).toFixed(1) +
+                        'k</div><div class="metric-lbl">Tamanho</div></div>';
+                    html += '<div class="metric-box"><div class="metric-val">' + (code.match(/function\s+\w+|=>/g) || [])
+                        .length + '</div><div class="metric-lbl">Funções</div></div>';
+                    html += '</div></div>';
+
+                    // Issues
+                    var all = [];
+                    errors.forEach(function(e) { all.push({ ...e, badge: 'badge-error', label: 'ERRO' }); });
+                    warnings.forEach(function(w) { all.push({ ...w, badge: 'badge-warn', label: 'AVISO' }); });
+                    infos.forEach(function(i) { all.push({ ...i, badge: 'badge-info', label: 'INFO' }); });
+                    oks.forEach(function(o) { all.push({ ...o, badge: 'badge-ok', label: 'OK' }); });
+
+                    if (all.length > 0) {
+                        html += '<div class="analysis-card"><h4>🔍 Diagnóstico (' + all.length + ' itens)</h4>';
+                        all.forEach(function(issue) {
+                            html += '<div class="issue-item">';
+                            html += '<span class="issue-badge ' + issue.badge + '">' + issue.label +
+                                '</span>';
+                            html += '<div><div class="issue-text">' + issue.text +
+                                '</div><div class="issue-line">' + issue.line + '</div></div>';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    } else {
+                        html +=
+                            '<div class="analysis-card"><h4>🔍 Diagnóstico</h4><p style="color:#4ADE80;font-size:12px">✅ Nenhum problema encontrado!</p></div>';
+                    }
+
+                    // Score
+                    var score = Math.max(0, 10 - errors.length * 2 - warnings.length * 0.5);
+                    var sc = score >= 8 ? '#4ADE80' : score >= 5 ? '#FB923C' : '#F87171';
+                    html += '<div class="analysis-card"><h4>⭐ Score de Qualidade</h4>';
+                    html += '<div style="display:flex;align-items:center;gap:12px">';
+                    html += '<div style="font-size:36px;font-weight:600;color:' + sc + '">' + score.toFixed(1) +
+                        '</div>';
+                    html += '<div style="color:#475569;font-size:13px">/ 10.0<br><span style="font-size:11px">' + errors
+                        .length + ' erro(s) • ' + warnings.length + ' aviso(s)</span></div>';
+                    html += '</div></div>';
+
+                    // Botão IA
+                    html +=
+                        '<button class="tbtn green" id="viewInIABtn" style="width:100%;padding:10px;margin-top:8px;font-size:12px">🤖 Ver análise detalhada com IA</button>';
+
+                    container.innerHTML = html;
+
+                    document.getElementById('viewInIABtn').addEventListener('click', function() {
+                        APP.quickAIAction('analise_geral');
+                    });
+                },
+
+                // ==================== UTILITIES ====================
+                downloadFile: function() {
+                    if (!this.editor) return;
+                    var content = this.editor.getValue();
+                    var fileName = 'codigo.txt';
+                    this.projects.forEach(function(p) {
+                        p.files.forEach(function(f) {
+                            if (f.id === APP.currentFileId) fileName = f.name;
+                        });
+                    });
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+                    a.download = fileName;
+                    a.click();
+                    this.toast('📥 ' + fileName + ' baixado!');
+                },
+
+                copyRoomLink: function() {
+                    if (!this.roomId) return;
+                    var url = location.origin + location.pathname + '?room=' + this.roomId;
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(url).then(function() { APP.toast('🔗 Link copiado!'); });
+                    } else {
+                        prompt('Copie o link:', url);
+                        APP.toast('📋 Link pronto!');
+                    }
+                },
+
+                showMembers: function() {
+                    if (!this.roomId) return;
+                    var s = this;
+                    db.collection('rooms').doc(this.roomId).get().then(function(doc) {
+                        var d = doc.data();
+                        var list = document.getElementById('membersList');
+                        list.innerHTML = '';
+                        var ownerDiv = document.createElement('div');
+                        ownerDiv.style.cssText =
+                            'padding:8px;background:#222;border-radius:4px;margin:4px 0;font-size:12px';
+                        ownerDiv.innerHTML = '👑 <b>' + d.ownerEmail + '</b> (Dono)';
+                        list.appendChild(ownerDiv);
+                        var me = d.memberEmails || {};
+                        d.members.forEach(function(uid) {
+                            if (uid !== d.ownerId) {
+                                var div = document.createElement('div');
+                                div.style.cssText =
+                                    'padding:8px;background:#111;border-radius:4px;margin:4px 0;font-size:12px;display:flex;justify-content:space-between;align-items:center';
+                                div.innerHTML = '<span>👤 ' + (me[uid] || uid.substring(0, 8) + '...') +
+                                    '</span>' +
+                                    (s.isOwner ?
+                                        '<button class="tbtn red" style="padding:2px 8px;font-size:9px;min-height:20px" data-uid="' +
+                                        uid + '">Remover</button>' : '');
+                                list.appendChild(div);
+                            }
+                        });
+                        list.querySelectorAll('[data-uid]').forEach(function(btn) {
+                            btn.addEventListener('click', function() {
+                                s.removeMember(this.getAttribute('data-uid'));
+                            });
+                        });
+                        document.getElementById('membersModal').classList.add('show');
+                    });
+                },
+
+                removeMember: function(uid) {
+                    if (!this.isOwner || !confirm('Remover este membro?')) return;
+                    var update = { members: firebase.firestore.FieldValue.arrayRemove(uid) };
+                    update['memberEmails.' + uid] = firebase.firestore.FieldValue.delete();
+                    var s = this;
+                    db.collection('rooms').doc(this.roomId).update(update).then(function() {
+                        s.toast('Membro removido!');
+                        s.showMembers();
+                    });
+                },
+
+                toggleExplorer: function() {
+                    var exp = document.getElementById('fileExplorer');
+                    this.explorerCollapsed = !this.explorerCollapsed;
+                    exp.style.width = this.explorerCollapsed ? '0px' : '200px';
+                    exp.style.minWidth = this.explorerCollapsed ? '0px' : '150px';
+                    exp.style.overflow = this.explorerCollapsed ? 'hidden' : '';
+                    if (this.editor) this.editor.refresh();
+                },
+
+                closeModal: function(id) {
+                    document.getElementById(id).classList.remove('show');
+                },
+
+                setupSplitter: function() {
+                    var sp = document.getElementById('splitterV');
+                    var ec = document.getElementById('editorContainer');
+                    var rp = document.getElementById('rightPanel');
+                    var dragging = false;
+
+                    sp.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        dragging = true;
+                    });
+
+                    document.addEventListener('mousemove', function(e) {
+                        if (!dragging) return;
+                        var rect = ec.parentElement.getBoundingClientRect();
+                        var pct = ((e.clientX - rect.left) / rect.width) * 100;
+                        var v = Math.max(30, Math.min(80, pct));
+                        ec.style.flex = 'none';
+                        ec.style.width = v + '%';
+                        rp.style.flex = 'none';
+                        rp.style.width = (100 - v) + '%';
+                        if (APP.editor) APP.editor.refresh();
+                    });
+
+                    document.addEventListener('mouseup', function() {
+                        dragging = false;
+                    });
+
+                    // Touch support
+                    sp.addEventListener('touchstart', function(e) {
+                        dragging = true;
+                    });
+                    document.addEventListener('touchmove', function(e) {
+                        if (!dragging) return;
+                        var rect = ec.parentElement.getBoundingClientRect();
+                        var pct = ((e.touches[0].clientX - rect.left) / rect.width) * 100;
+                        var v = Math.max(30, Math.min(80, pct));
+                        ec.style.flex = 'none';
+                        ec.style.width = v + '%';
+                        rp.style.flex = 'none';
+                        rp.style.width = (100 - v) + '%';
+                        if (APP.editor) APP.editor.refresh();
+                    });
+                    document.addEventListener('touchend', function() {
+                        dragging = false;
+                    });
+                },
+
+                showError: function(msg) {
+                    var e = document.getElementById('errorMsg');
+                    e.textContent = msg;
+                    e.style.display = 'block';
+                    setTimeout(function() { e.style.display = 'none'; }, 4000);
+                },
+
+                toast: function(msg) {
+                    var x = document.querySelector('.toast');
+                    if (x) x.remove();
+                    var el = document.createElement('div');
+                    el.className = 'toast';
+                    el.textContent = msg;
+                    document.body.appendChild(el);
+                    setTimeout(function() {
+                        el.style.opacity = '0';
+                        el.style.transition = 'opacity .3s';
+                        setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
+                    }, 2000);
+                },
+
+                showLoading: function(s) {
+                    document.getElementById('loadingOverlay').classList.toggle('show', s);
+                },
+
+                translateError: function(e) {
+                    var m = {
+                        'auth/email-already-in-use': 'Email já cadastrado.',
+                        'auth/invalid-email': 'Email inválido.',
+                        'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres).',
+                        'auth/user-not-found': 'Usuário não encontrado.',
+                        'auth/wrong-password': 'Senha incorreta.',
+                        'auth/too-many-requests': 'Muitas tentativas. Aguarde um momento.',
+                        'auth/network-request-failed': 'Sem conexão com a internet.',
+                        'auth/operation-not-allowed': 'Login/registro desabilitado no Firebase Console.'
+                    };
+                    return m[e.code] || ('Erro: ' + (e.message || 'Desconhecido'));
+                }
+            };
+
+            // ==================== START ====================
+            window.APP = APP;
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                setTimeout(function() { APP.init(); }, 100);
+            } else {
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(function() { APP.init(); }, 100);
+                });
+            }
+
+            console.log('📦 CodeCollab Pro carregado!');
+        })();
+    </script>
 </body>
 </html>
