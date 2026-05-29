@@ -7,9 +7,7 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <style>
 :root {
   --bg:        #0d1117;
@@ -295,6 +293,7 @@ html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);heig
         <div class="editor-toolbar">
           <span class="lang-badge" id="langBadge">—</span>
           <button class="run-btn" id="runBtn">▶ Executar</button>
+          <button class="run-btn" id="downloadBtn" style="background:var(--accent);margin-left:4px">⬇ Baixar</button>
           <div class="sync-indicator" id="syncIndicator">
             <div class="sync-dot" id="syncDot"></div>
             <span id="syncLabel">Sincronizado</span>
@@ -342,6 +341,9 @@ html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);heig
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",
@@ -372,6 +374,7 @@ var APP = {
   cursorTimer: null,
   isSyncing: false,
   presenceUnsub: null,
+  reposUnsub: null,
   onlineUsers: {},
 
   init: function() {
@@ -421,6 +424,7 @@ var APP = {
     document.getElementById('membersBtn').onclick = function() { s.showMembers(); };
     document.getElementById('closeMembersBtn').onclick = function() { document.getElementById('membersModal').classList.remove('show'); };
     document.getElementById('runBtn').onclick = function() { s.runCode(); };
+    document.getElementById('downloadBtn').onclick = function() { s.downloadCurrentFile(); };
     document.getElementById('newFileBtn').onclick = function() { s.showNewFileInput(); };
     document.getElementById('collabId').onclick = function() { s.copyRepoId(); };
     document.getElementById('tabConsole').onclick = function() { s.switchOutput('console'); };
@@ -492,6 +496,7 @@ var APP = {
   logout: function() {
     var s = this;
     this.cleanup();
+    if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
     auth.signOut().then(function() {
       s.user = null;
       s.currentRepo = null;
@@ -518,11 +523,14 @@ var APP = {
   },
   loadRepos: function() {
     var s = this;
-    db.collection('repos')
+    // Cancel previous dash listener if any
+    if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
+    this.reposUnsub = db.collection('repos')
       .where('members','array-contains', this.user.uid)
       .orderBy('updatedAt','desc')
-      .get().then(function(snap) {
+      .onSnapshot(function(snap) {
         var grid = document.getElementById('repoGrid');
+        if (!grid) return;
         if (snap.empty) {
           grid.innerHTML = '<div class="empty-state"><h3>Nenhum repositório ainda</h3><p>Crie seu primeiro repositório para começar a colaborar</p></div>';
           return;
@@ -551,7 +559,7 @@ var APP = {
           card.onclick = function() { s.openRepo(doc.id); };
           grid.appendChild(card);
         });
-      }).catch(function(e) { s.toast('Erro ao carregar repositórios: ' + e.message, 'err'); });
+      }, function(e) { s.toast('Erro ao carregar repositórios: ' + e.message, 'err'); });
   },
 
   openNewRepoModal: function() {
@@ -600,6 +608,10 @@ var APP = {
 
   openRepo: function(repoId) {
     var s = this;
+    // Cancel previous repo listener
+    if (this.repoListener) { this.repoListener(); this.repoListener = null; }
+    // Also cancel the dash repos listener when entering a repo
+    if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
     db.collection('repos').doc(repoId).get().then(function(doc) {
       if (!doc.exists) { s.toast('Repositório não encontrado.', 'err'); return; }
       s.currentRepo = { id: doc.id, ...doc.data() };
@@ -617,6 +629,12 @@ var APP = {
       s.openTabs = [];
       s.currentFile = null;
       history.pushState({},'','?repo='+repoId);
+      // Listen for repo changes (new members, etc.)
+      s.repoListener = db.collection('repos').doc(repoId).onSnapshot(function(snap) {
+        if (snap.exists) {
+          s.currentRepo = { id: snap.id, ...snap.data() };
+        }
+      });
       s.listenFiles();
       s.listenPresence();
     });
@@ -649,10 +667,12 @@ var APP = {
         '<span class="file-icon">' + icon + '</span>' +
         '<span class="file-name">' + d.name + '</span>' +
         '<div class="file-actions">' +
+          '<button class="file-del" title="Baixar" style="color:var(--text3)" data-dl>⬇</button>' +
           '<button class="file-del" title="Excluir">✕</button>' +
         '</div>';
       item.querySelector('.file-name').onclick = function(e) { e.stopPropagation(); s.openFile(doc.id, d); };
-      item.querySelector('.file-del').onclick = function(e) { e.stopPropagation(); s.deleteFile(doc.id, d.name); };
+      item.querySelector('[data-dl]').onclick = function(e) { e.stopPropagation(); s.downloadFile(d.name, d.content || ''); };
+      item.querySelector('.file-del:not([data-dl])').onclick = function(e) { e.stopPropagation(); s.deleteFile(doc.id, d.name); };
       item.onclick = function() { s.openFile(doc.id, d); };
       tree.appendChild(item);
     });
@@ -904,21 +924,45 @@ var APP = {
     var colors = CURSOR_COLORS;
     var i = 0;
     var emails = this.currentRepo.memberEmails || {};
-    (this.currentRepo.members||[]).forEach(function(uid) {
+    var members = this.currentRepo.members || [];
+    if (!members.length) {
+      list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0">Nenhum membro ainda.</div>';
+      document.getElementById('membersModal').classList.add('show');
+      return;
+    }
+    members.forEach(function(uid) {
       var email = emails[uid] || uid.substring(0,8)+'...';
       var isOwner = uid === s.currentRepo.ownerId;
-      var isOnline = s.onlineUsers[uid] && s.onlineUsers[uid].online;
+      var isSelf = uid === s.user.uid;
+      // Check online: self is always online; others from onlineUsers
+      var isOnline = isSelf ? true : (s.onlineUsers[uid] && s.onlineUsers[uid].online);
       var row = document.createElement('div');
       row.className = 'member-row';
       row.innerHTML =
         '<div class="member-avatar" style="background:' + colors[i%colors.length] + '">' + email[0].toUpperCase() + '</div>' +
-        '<div class="member-email">' + email + '</div>' +
+        '<div class="member-email">' + email + (isSelf ? ' <span style="color:var(--text3);font-size:11px">(você)</span>' : '') + '</div>' +
         '<div class="member-role">' + (isOwner?'👑 Dono':'Colaborador') + '</div>' +
         '<div class="member-online' + (isOnline?'':' offline') + '" title="' + (isOnline?'Online':'Offline') + '"></div>';
       list.appendChild(row);
       i++;
     });
     document.getElementById('membersModal').classList.add('show');
+  },
+
+  downloadFile: function(name, content) {
+    var blob = new Blob([content], { type: 'text/plain' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    this.toast('⬇ Baixando ' + name);
+  },
+
+  downloadCurrentFile: function() {
+    if (!this.currentFile) return this.toast('Nenhum arquivo aberto.', 'err');
+    var content = document.getElementById('codeEditor').value;
+    this.downloadFile(this.currentFile.name, content);
   },
 
   runCode: function() {
@@ -988,6 +1032,7 @@ var APP = {
     this.unsubs = [];
     if (this.presenceUnsub) { this.presenceUnsub(); this.presenceUnsub = null; }
     if (this.fileUnsub) { this.fileUnsub(); this.fileUnsub = null; }
+    if (this.repoListener) { this.repoListener(); this.repoListener = null; }
     clearTimeout(this.syncTimer); this.syncTimer = null;
   },
 
@@ -1010,7 +1055,11 @@ var APP = {
 };
 
 window.APP = APP;
-APP.init();
+if (typeof firebase !== 'undefined') {
+  APP.init();
+} else {
+  window.addEventListener('load', function() { APP.init(); });
+}
 </script>
 </body>
 </html>
