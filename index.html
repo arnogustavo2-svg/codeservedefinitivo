@@ -137,6 +137,7 @@ document.getElementById('themeSelect').onchange=function(){var t=document.getEle
 document.getElementById('fontSizeSlider').oninput=function(){s.fontSize=parseInt(this.value);document.getElementById('fontSizeVal').textContent=s.fontSize+'px';document.getElementById('codeEditor').style.fontSize=s.fontSize+'px'};
 document.getElementById('codeEditor').addEventListener('focus',function(){s.editorFocused=true});
 document.getElementById('codeEditor').addEventListener('blur',function(){s.editorFocused=false});
+document.getElementById('codeEditor').addEventListener('input',function(){if(s.offlineMode||!s.roomId)return;clearTimeout(s.syncTimer);s.syncTimer=setTimeout(function(){db.collection('rooms').doc(s.roomId).update({code:document.getElementById('codeEditor').value,language:s.lang}).catch(function(){})},600)});
 document.querySelectorAll('.modal').forEach(function(m){m.onclick=function(e){if(e.target===m)m.classList.remove('show')}});
 document.onkeydown=function(e){if(e.key==='Escape')document.querySelectorAll('.modal.show').forEach(function(m){m.classList.remove('show')});if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();s.runCode()}};
 this.setupSplitter();setTimeout(function(){document.getElementById('loadingOverlay').classList.remove('show')},2000)},
