@@ -2,166 +2,1015 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CodeCollab Pro</title>
-<meta name="theme-color" content="#0a0a0a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkNvZGVDb2xsYWIgUHJvIiwKICAic2hvcnRfbmFtZSI6ICJDb2RlQ29sbGFiIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwYTBhMGEiLAogICJ0aGVtZV9jb2xvciI6ICIjMGEwYTBhIgp9">
+<meta name="theme-color" content="#0d1117">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
+:root {
+  --bg:        #0d1117;
+  --surface:   #161b22;
+  --surface2:  #1c2128;
+  --border:    #30363d;
+  --border2:   #21262d;
+  --text:      #e6edf3;
+  --text2:     #8b949e;
+  --text3:     #484f58;
+  --accent:    #388bfd;
+  --accent2:   #1f6feb;
+  --green:     #3fb950;
+  --red:       #f85149;
+  --orange:    #d29922;
+  --purple:    #a371f7;
+  --cursor-a:  #388bfd;
+  --cursor-b:  #3fb950;
+  --cursor-c:  #f78166;
+  --cursor-d:  #a371f7;
+  --radius:    6px;
+  --font-ui:   'Geist', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{font-family:Arial,sans-serif;background:#0a0a0a;color:#e0e0e0;height:100vh;height:100dvh;width:100vw;overflow:hidden;position:fixed;top:0;left:0;-webkit-font-smoothing:antialiased}
-#loginPage{display:flex;align-items:center;justify-content:center;height:100%;background:#0a0a0a;padding:16px;flex-direction:column;gap:10px}
-.login-card{background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:20px;width:100%;max-width:380px}
-.login-card h1{text-align:center;font-size:20px;font-weight:700;color:#fff;margin-bottom:14px}
-.login-card input{width:100%;padding:12px;margin:5px 0;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:8px;font-size:16px;outline:none;-webkit-appearance:none}
-.login-card input:focus{border-color:#4a90d9}
-.login-card button{width:100%;padding:14px;margin:6px 0;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}
-.btn-login{background:#fff;color:#000}
-.btn-register{background:transparent;border:1px solid #555;color:#ccc}
-.btn-skip{background:transparent;border:1px solid #4a90d9;color:#4a90d9;padding:12px;border-radius:8px;font-size:14px;cursor:pointer;width:100%;max-width:380px;text-align:center}
-.btn-install{background:#1e3a5f;border:1px solid #3b82f6;color:#bfdbfe;padding:12px;border-radius:8px;font-size:14px;cursor:pointer;width:100%;max-width:380px;text-align:center;margin-top:4px}
-.error-msg{background:#400;color:#f66;padding:10px;border-radius:6px;font-size:13px;text-align:center;margin:6px 0;display:none}
-#editorPage{display:none;height:100%;flex-direction:column}
-.toolbar{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:#1a1a1a;border-bottom:1px solid #333;flex-shrink:0;flex-wrap:wrap;gap:4px;min-height:40px}
-.toolbar button,.toolbar select{padding:6px 10px;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:4px;cursor:pointer;font-size:11px;-webkit-appearance:none;min-height:32px}
-.toolbar .run-btn{background:#0a5;border-color:#0a5;font-weight:bold}
-.toolbar .logout-btn{background:#a00;border-color:#a00}
-.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
-@media(min-width:768px){.main-area{flex-direction:row}}
-.panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:120px}
-.panel-header{padding:4px 8px;background:#1a1a1a;border-bottom:1px solid #333;font-size:10px;color:#888;flex-shrink:0}
-#codeEditor{width:100%;height:100%;background:#0d0d0d;color:#0f0;border:none;padding:10px;font-family:monospace;font-size:13px;resize:none;outline:none;-webkit-appearance:none}
-#console{background:#0d0d0d;color:#0f0;font-family:monospace;font-size:12px;padding:10px;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;white-space:pre-wrap}
-#previewContainer{display:none;height:100%;background:#fff}
-#previewFrame{width:100%;height:100%;border:none;background:#fff}
-.splitter{width:100%;height:5px;background:#333;cursor:row-resize;flex-shrink:0}
-@media(min-width:768px){.splitter{width:5px;height:auto;cursor:col-resize}}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:14px}
-.modal.show{display:flex}
-.modal-content{background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px;width:100%;max-width:380px;max-height:80vh;overflow-y:auto}
-.modal-content h3{color:#fff;font-size:16px;margin-bottom:10px}
-.modal-content button{width:100%;padding:10px;margin-top:6px;background:#333;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;color:#000;padding:8px 16px;border-radius:20px;font-size:12px;z-index:200;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center}
-.loading.show{display:flex}
-.spinner{width:30px;height:30px;border:3px solid #333;border-top:3px solid #ccc;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);height:100vh;width:100vw;overflow:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#authPage{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg);position:relative;overflow:hidden}
+#authPage::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(56,139,253,.12),transparent);pointer-events:none}
+.auth-wrap{width:100%;max-width:400px;padding:24px}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;justify-content:center}
+.auth-logo svg{width:32px;height:32px}
+.auth-logo span{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.auth-logo span b{color:var(--accent)}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:12px}
+.auth-card h2{font-size:18px;font-weight:600;margin-bottom:20px;color:var(--text)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.field input{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);font-size:14px;font-family:var(--font-ui);outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--text3)}
+.check-row{display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;user-select:none}
+.check-box{width:16px;height:16px;min-width:16px;border:1px solid var(--border);border-radius:3px;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.check-box.on{background:var(--accent);border-color:var(--accent)}
+.check-box.on::after{content:'✓';font-size:11px;color:#fff;font-weight:700}
+.check-text{font-size:13px;color:var(--text2)}
+.room-input-wrap{margin:10px 0;display:none}
+.room-input-wrap input{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);font-size:13px;font-family:var(--font-mono);outline:none}
+.room-input-wrap input:focus{border-color:var(--accent)}
+.divider{border:none;border-top:1px solid var(--border2);margin:16px 0}
+.btn{width:100%;padding:10px 16px;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-ui);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);margin-top:8px}
+.btn-ghost:hover{border-color:var(--text2);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12px;width:auto}
+.err-msg{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:var(--red);padding:10px 12px;border-radius:var(--radius);font-size:13px;margin-top:10px;display:none}
+.link{color:var(--accent);cursor:pointer;text-decoration:none}
+.link:hover{text-decoration:underline}
+.auth-footer{text-align:center;font-size:12px;color:var(--text3);margin-top:16px}
+#appPage{display:none;height:100vh;flex-direction:column}
+.topnav{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:50}
+.nav-logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--text);text-decoration:none;cursor:pointer}
+.nav-logo svg{width:22px;height:22px}
+.nav-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.nav-repo-name{font-size:14px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.nav-repo-name span{color:var(--text);font-weight:500}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.nav-btn{padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:var(--radius);font-size:12px;cursor:pointer;font-family:var(--font-ui);display:flex;align-items:center;gap:5px;transition:all .15s}
+.nav-btn:hover{border-color:var(--text2);color:var(--text)}
+.nav-btn.danger{border-color:rgba(248,81,73,.4);color:var(--red)}
+.nav-btn.danger:hover{background:rgba(248,81,73,.1)}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0}
+.presence-bar{display:flex;align-items:center;gap:4px}
+.presence-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;margin-left:-6px;cursor:default;position:relative}
+.presence-dot:first-child{margin-left:0}
+.presence-dot[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:3px 7px;border-radius:4px;font-size:11px;white-space:nowrap;pointer-events:none}
+.app-body{flex:1;display:flex;overflow:hidden}
+.sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .2s}
+.sidebar.collapsed{width:0;min-width:0}
+.sidebar-header{padding:12px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sidebar-header h3{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.sidebar-actions{display:flex;gap:4px}
+.icon-btn{width:24px;height:24px;background:transparent;border:none;color:var(--text2);cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.icon-btn:hover{background:var(--border);color:var(--text)}
+.sidebar-section{padding:8px 0;flex:1;overflow-y:auto}
+.file-tree-item{display:flex;align-items:center;gap:6px;padding:5px 12px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .1s;position:relative;user-select:none}
+.file-tree-item:hover{background:var(--surface2);color:var(--text)}
+.file-tree-item.active{background:rgba(56,139,253,.1);color:var(--accent)}
+.file-tree-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent)}
+.file-icon{font-size:13px;flex-shrink:0}
+.file-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-actions{display:none;gap:2px}
+.file-tree-item:hover .file-actions{display:flex}
+.file-del{width:18px;height:18px;background:transparent;border:none;color:var(--text3);cursor:pointer;border-radius:3px;font-size:11px;display:flex;align-items:center;justify-content:center}
+.file-del:hover{background:rgba(248,81,73,.2);color:var(--red)}
+.sidebar-empty{padding:20px 12px;text-align:center;color:var(--text3);font-size:12px}
+.new-file-row{padding:8px 12px;border-top:1px solid var(--border2)}
+.new-file-input{width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--accent);color:var(--text);border-radius:4px;font-size:12px;font-family:var(--font-mono);outline:none}
+.editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.editor-tabs{height:36px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:flex-end;overflow-x:auto;flex-shrink:0;padding:0 8px;gap:1px}
+.editor-tabs::-webkit-scrollbar{height:0}
+.tab{display:flex;align-items:center;gap:6px;padding:0 12px;height:32px;cursor:pointer;font-size:12px;color:var(--text2);border-radius:4px 4px 0 0;border:1px solid transparent;border-bottom:none;transition:all .1s;white-space:nowrap;flex-shrink:0}
+.tab:hover{color:var(--text);background:var(--surface2)}
+.tab.active{color:var(--text);background:var(--bg);border-color:var(--border)}
+.tab-close{width:14px;height:14px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3);transition:all .1s}
+.tab-close:hover{background:var(--border);color:var(--red)}
+.editor-toolbar{height:36px;background:var(--surface2);border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0}
+.lang-badge{padding:2px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:11px;color:var(--text2);font-family:var(--font-mono)}
+.sync-indicator{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);margin-left:auto}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-dot.syncing{background:var(--orange);animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.check-row{display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer}
-.check-box{width:20px;height:20px;min-width:20px;border:2px solid #555;border-radius:4px;background:#0a0a0a;display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;font-weight:bold}
-.check-box.on{background:#4a90d9;border-color:#4a90d9;color:#fff}
-.check-text{font-size:12px;color:#999}
-.link{color:#4af;text-decoration:underline}
-.copy-btn{background:#1a1a1a;border:1px solid #4a90d9;color:#4a90d9;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:10px;margin-left:6px}
-.member-item{display:flex;justify-content:space-between;align-items:center;padding:8px;background:#111;border-radius:4px;margin:4px 0;font-size:12px}
-.remove-btn{background:#a00;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px}
+.sync-dot.offline{background:var(--red);animation:none}
+.editor-wrap{flex:1;position:relative;overflow:hidden}
+#codeEditor{width:100%;height:100%;background:#0d1117;color:#e6edf3;border:none;padding:16px;font-family:var(--font-mono);font-size:13px;line-height:1.6;resize:none;outline:none;tab-size:2}
+#codeEditor::selection{background:rgba(56,139,253,.3)}
+.remote-cursor{position:absolute;pointer-events:none;z-index:10;transition:top .1s,left .1s}
+.remote-cursor-line{position:absolute;width:2px;top:0;bottom:0}
+.remote-cursor-label{position:absolute;top:-18px;left:0;font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;white-space:nowrap;font-family:var(--font-ui)}
+.output-panel{height:200px;background:var(--surface);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.output-tabs{height:32px;display:flex;align-items:center;padding:0 12px;gap:0;border-bottom:1px solid var(--border2);flex-shrink:0}
+.out-tab{padding:0 12px;height:32px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s}
+.out-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.out-tab:hover{color:var(--text)}
+.out-content{flex:1;overflow:hidden;position:relative}
+#consoleOut{padding:10px 14px;font-family:var(--font-mono);font-size:12px;color:var(--green);line-height:1.5;height:100%;overflow-y:auto;white-space:pre-wrap}
+#previewOut{width:100%;height:100%;border:none;background:#fff;display:none}
+.splitter-h{height:5px;background:var(--border2);cursor:row-resize;flex-shrink:0;transition:background .15s}
+.splitter-h:hover,.splitter-h.dragging{background:var(--accent)}
+#dashPage{display:none;flex:1;overflow-y:auto;padding:32px}
+.dash-header{max-width:900px;margin:0 auto 24px;display:flex;align-items:center;justify-content:space-between}
+.dash-header h1{font-size:20px;font-weight:600}
+.repo-grid{max-width:900px;margin:0 auto;display:grid;gap:12px}
+.repo-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;cursor:pointer;transition:all .15s;position:relative}
+.repo-card:hover{border-color:var(--accent);background:var(--surface2)}
+.repo-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.repo-name{font-size:15px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:8px}
+.repo-visibility{font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid var(--border);color:var(--text2);font-weight:500}
+.repo-desc{font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.4}
+.repo-meta{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text3)}
+.repo-meta-item{display:flex;align-items:center;gap:5px}
+.repo-actions{display:flex;gap:6px;margin-top:12px}
+.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.badge-green{background:rgba(63,185,80,.1);color:var(--green);border:1px solid rgba(63,185,80,.2)}
+.badge-blue{background:rgba(56,139,253,.1);color:var(--accent);border:1px solid rgba(56,139,253,.2)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state h3{font-size:16px;color:var(--text2);margin-bottom:8px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;width:100%;max-width:440px}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.modal-footer .btn{width:auto;padding:8px 16px}
+.member-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)}
+.member-row:last-child{border:none}
+.member-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.member-email{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.member-role{font-size:11px;color:var(--text3)}
+.member-online{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.member-online.offline{background:var(--text3)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:var(--radius);font-size:13px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+#loadingOverlay{display:flex;position:fixed;inset:0;background:var(--bg);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+#loadingOverlay span{font-size:13px;color:var(--text2)}
+.collab-bar{height:36px;background:rgba(56,139,253,.06);border-bottom:1px solid rgba(56,139,253,.15);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
+.collab-id{font-family:var(--font-mono);font-size:12px;color:var(--accent);background:rgba(56,139,253,.1);padding:3px 10px;border-radius:4px;cursor:pointer;border:1px solid rgba(56,139,253,.2)}
+.collab-id:hover{background:rgba(56,139,253,.2)}
+.collab-label{font-size:12px;color:var(--text2)}
+.run-btn{padding:5px 12px;background:var(--green);border:none;border-radius:var(--radius);color:#000;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-ui);display:flex;align-items:center;gap:5px;transition:all .15s}
+.run-btn:hover{filter:brightness(1.1)}
+@media(max-width:768px){
+  .sidebar{position:absolute;z-index:40;height:100%;box-shadow:4px 0 20px rgba(0,0,0,.4)}
+  .sidebar.collapsed{width:0}
+  .dash-header{flex-direction:column;gap:12px;align-items:flex-start}
+}
 </style>
 </head>
 <body>
-<div id="loginPage">
-<div class="login-card">
-<h1>🚀 CodeCollab Pro</h1>
-<input type="email" id="email" placeholder="Email" autocomplete="email" inputmode="email">
-<input type="password" id="password" placeholder="Senha">
-<div id="roomGroup" style="display:none"><input type="text" id="roomId" placeholder="Cole o código da sala aqui"></div>
-<div class="check-row" id="joinRoomRow"><div class="check-box" id="joinRoomBox"></div><span class="check-text">Entrar em sala existente</span></div>
-<input type="checkbox" id="joinRoomCheck" style="display:none">
-<div class="check-row" id="lgpdRow"><div class="check-box" id="lgpdBox"></div><span class="check-text">Aceito os <span class="link" id="termsLink">Termos</span> e <span class="link" id="lgpdLink">LGPD</span></span></div>
-<input type="checkbox" id="lgpdCheck" style="display:none">
-<div class="error-msg" id="errorMsg"></div>
-<button class="btn-login" id="loginBtn">Entrar</button>
-<button class="btn-register" id="registerBtn">Criar Conta</button>
+
+<div id="loadingOverlay"><div class="spinner"></div><span>Carregando...</span></div>
+
+<div id="authPage" style="display:none">
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#388bfd"/><path d="M8 10h6l4 12 4-12h6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="22" r="2" fill="#fff"/></svg>
+      <span>Code<b>Collab</b></span>
+    </div>
+    <div class="auth-card">
+      <h2 id="authTitle">Entrar na sua conta</h2>
+      <div class="field"><label>Email</label><input type="email" id="email" placeholder="voce@exemplo.com" autocomplete="email"></div>
+      <div class="field"><label>Senha</label><input type="password" id="password" placeholder="••••••••"></div>
+      <div class="check-row" id="joinRow">
+        <div class="check-box" id="joinBox"></div>
+        <span class="check-text">Entrar em repositório existente</span>
+      </div>
+      <input type="checkbox" id="joinCheck" style="display:none">
+      <div class="room-input-wrap" id="roomInputWrap">
+        <input type="text" id="roomIdInput" placeholder="Cole o ID do repositório aqui" spellcheck="false">
+      </div>
+      <div class="check-row" id="lgpdRow">
+        <div class="check-box" id="lgpdBox"></div>
+        <span class="check-text">Aceito os <a class="link" id="termsLink">Termos de Uso</a></span>
+      </div>
+      <input type="checkbox" id="lgpdCheck" style="display:none">
+      <div class="err-msg" id="errMsg"></div>
+      <hr class="divider">
+      <button class="btn btn-primary" id="loginBtn">Entrar</button>
+      <button class="btn btn-ghost" id="registerBtn">Criar conta</button>
+    </div>
+    <div class="auth-footer">CodeCollab Pro · Colaboração em tempo real</div>
+  </div>
 </div>
-<button class="btn-skip" id="skipBtn">⚡ Usar sem login</button>
-<button class="btn-install" id="installBtn">📱 Adicionar à tela inicial</button>
+
+<div id="appPage" style="display:none;flex-direction:column;height:100vh">
+  <nav class="topnav">
+    <div class="nav-logo" id="navLogoBtn">
+      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#388bfd"/><path d="M8 10h6l4 12 4-12h6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="22" r="2" fill="#fff"/></svg>
+      CodeCollab
+    </div>
+    <div class="nav-sep"></div>
+    <div class="nav-repo-name" id="navRepoName" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="var(--text3)"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"/></svg>
+      <span id="navRepoTitle">—</span>
+    </div>
+    <div class="nav-right">
+      <div class="presence-bar" id="presenceBar"></div>
+      <button class="nav-btn" id="membersBtn" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4zM2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.001 4.001 0 00-7.9 0 .75.75 0 01-1.482-.236A5.507 5.507 0 013.102 8.05 3.49 3.49 0 012 5.5zM11 4a.75.75 0 100 1.5 1.5 1.5 0 01.666 2.844.75.75 0 00-.416.672v.352a.75.75 0 00.574.73c1.2.289 2.162 1.2 2.522 2.372a.75.75 0 101.434-.44 5.01 5.01 0 00-2.56-3.012A3 3 0 0011 4z"/></svg>
+        Membros
+      </button>
+      <button class="nav-btn" id="newRepoBtn">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+        Novo repositório
+      </button>
+      <div class="avatar" id="userAvatar" title="">?</div>
+      <button class="nav-btn danger" id="logoutBtn">Sair</button>
+    </div>
+  </nav>
+
+  <div class="collab-bar" id="collabBar" style="display:none">
+    <span class="collab-label">🔗 Compartilhar:</span>
+    <span class="collab-id" id="collabId" title="Clique para copiar">—</span>
+    <span class="collab-label" style="margin-left:4px;color:var(--text3)">Cole este ID para convidar colaboradores</span>
+  </div>
+
+  <div id="dashPage" style="display:none;flex:1;overflow-y:auto;padding:32px">
+    <div class="dash-header">
+      <h1>Seus repositórios</h1>
+      <button class="btn btn-primary btn-sm" id="newRepoBtnDash">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+        Novo repositório
+      </button>
+    </div>
+    <div class="repo-grid" id="repoGrid">
+      <div class="empty-state"><h3>Nenhum repositório ainda</h3><p>Crie seu primeiro repositório para começar</p></div>
+    </div>
+  </div>
+
+  <div id="editorPage" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+    <div style="flex:1;display:flex;overflow:hidden">
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h3>Arquivos</h3>
+          <div class="sidebar-actions">
+            <button class="icon-btn" id="newFileBtn" title="Novo arquivo">＋</button>
+          </div>
+        </div>
+        <div class="sidebar-section" id="fileTree"></div>
+        <div class="new-file-row" id="newFileRow" style="display:none">
+          <input class="new-file-input" id="newFileInput" placeholder="nome.js">
+        </div>
+      </div>
+
+      <div class="editor-area">
+        <div class="editor-tabs" id="editorTabs">
+          <div style="display:flex;align-items:center;color:var(--text3);font-size:12px;padding:0 8px">Selecione um arquivo</div>
+        </div>
+        <div class="editor-toolbar">
+          <span class="lang-badge" id="langBadge">—</span>
+          <button class="run-btn" id="runBtn">▶ Executar</button>
+          <div class="sync-indicator" id="syncIndicator">
+            <div class="sync-dot" id="syncDot"></div>
+            <span id="syncLabel">Sincronizado</span>
+          </div>
+        </div>
+        <div class="editor-wrap">
+          <textarea id="codeEditor" spellcheck="false" placeholder="Selecione um arquivo para editar..."></textarea>
+          <div id="cursorLayer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
+        </div>
+        <div class="splitter-h" id="splitterH"></div>
+        <div class="output-panel" id="outputPanel">
+          <div class="output-tabs">
+            <div class="out-tab active" id="tabConsole">Console</div>
+            <div class="out-tab" id="tabPreview">Preview</div>
+          </div>
+          <div class="out-content">
+            <div id="consoleOut">// ▶ Execute o código para ver a saída</div>
+            <iframe id="previewOut" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<div id="editorPage">
-<div class="toolbar">
-<span style="font-weight:bold;color:#fff;font-size:13px">🚀 CC</span>
-<span id="roomBadge" style="font-size:9px;color:#888;cursor:pointer;background:#111;padding:3px 5px;border-radius:3px">Offline</span>
-<button class="copy-btn" id="copyRoomBtn">📋 Copiar código</button>
-<select id="langSelect"><option value="html">HTML</option><option value="javascript">JS</option><option value="python">PY</option></select>
-<button class="run-btn" id="runBtn">▶ Run</button>
-<button id="downloadBtn">⬇</button>
-<button id="fullscreenBtn">⛶</button>
-<button id="configBtn">⚙</button>
-<button id="membersBtn">👥</button>
-<button class="logout-btn" id="logoutBtn">✕</button>
+
+<div class="modal-overlay" id="newRepoModal">
+  <div class="modal">
+    <h3>📁 Novo repositório</h3>
+    <div class="field"><label>Nome do repositório</label><input type="text" id="repoNameInput" placeholder="meu-projeto" spellcheck="false"></div>
+    <div class="field"><label>Descrição (opcional)</label><input type="text" id="repoDescInput" placeholder="Breve descrição do projeto"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="cancelRepoBtn">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="createRepoBtn">Criar repositório</button>
+    </div>
+  </div>
 </div>
-<div class="main-area" id="mainArea">
-<div class="panel" id="editorPanel"><div class="panel-header">📝 Editor</div><textarea id="codeEditor" placeholder="Digite seu código aqui..."></textarea></div>
-<div class="splitter" id="splitter"></div>
-<div class="panel" id="outputPanel"><div class="panel-header">💻 Console / Preview</div><div id="console">// ▶ Run ou Ctrl+Enter</div><div id="previewContainer"><iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe></div></div>
+
+<div class="modal-overlay" id="membersModal">
+  <div class="modal">
+    <h3>👥 Colaboradores</h3>
+    <div id="membersList"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" id="closeMembersBtn">Fechar</button>
+    </div>
+  </div>
 </div>
-</div>
-<div class="modal" id="configModal"><div class="modal-content"><h3>⚙️ Config</h3><div style="margin:6px 0"><label>Tema</label><select id="themeSelect" style="width:100%;padding:6px;background:#0a0a0a;border:1px solid #333;color:#fff;border-radius:4px;margin-top:3px"><option value="dark">Escuro</option><option value="light">Claro</option></select></div><div style="margin:6px 0"><label>Fonte: <span id="fontSizeVal">14px</span></label><input type="range" id="fontSizeSlider" min="12" max="20" value="14" style="width:100%;margin-top:3px"></div><button id="closeConfigBtn">Fechar</button></div></div>
-<div class="modal" id="membersModal"><div class="modal-content"><h3>👥 Membros</h3><div id="membersList"></div><button id="closeMembersBtn">Fechar</button></div></div>
-<div class="modal" id="legalModal"><div class="modal-content"><h3 id="legalTitle"></h3><div id="legalContent" style="font-size:12px;color:#999;line-height:1.5"></div><button id="closeLegalBtn">Fechar</button></div></div>
-<div class="modal" id="fullscreenModal"><div style="position:fixed;inset:0;background:#000;z-index:150;display:flex;flex-direction:column"><div style="padding:6px 10px;background:#1a1a1a;display:flex;justify-content:space-between"><span style="color:#888;font-size:11px">▶ Preview</span><button id="closeFullscreenBtn" style="background:#a00;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px">✕ Fechar</button></div><iframe id="fullscreenFrame" sandbox="allow-scripts allow-same-origin" style="flex:1;border:none;background:#fff"></iframe></div></div>
-<div class="loading" id="loadingOverlay"><div style="text-align:center"><div class="spinner"></div><span style="color:#ccc;font-size:12px">Carregando...</span></div></div>
+
 <script>
-firebase.initializeApp({apiKey:"AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",authDomain:"codeverse-14794.firebaseapp.com",projectId:"codeverse-14794",storageBucket:"codeverse-14794.firebasestorage.app",messagingSenderId:"307083349125",appId:"1:307083349125:web:11b96a4c3fd856d6236dec"});
-var auth=firebase.auth(),db=firebase.firestore();
-var T={html:'<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"><style>body{font-family:sans-serif;padding:20px;background:#f5f5f5}h1{color:#333}</style></head>\n<body><h1>🚀 Olá!</h1><p>Seu código aqui.</p></body>\n</html>',javascript:'// JavaScript\nconsole.log("Hello!");\n',python:'# Python\nprint("Hello!")\n'};
-function tc(b,i){var x=document.getElementById(b),y=document.getElementById(i);y.checked=!y.checked;if(y.checked){x.classList.add('on');x.textContent='✓'}else{x.classList.remove('on');x.textContent=''}if(y.onchange)y.onchange()}
-var deferredPrompt;
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e});
-var APP={user:null,roomId:null,isOwner:false,lang:'html',fontSize:14,unsub:null,previewUrl:null,syncTimer:null,offlineMode:false,
-init:function(){document.getElementById('loginPage').style.display='flex';document.getElementById('editorPage').style.display='none';var s=this;
-document.getElementById('joinRoomRow').onclick=function(){tc('joinRoomBox','joinRoomCheck')};
-document.getElementById('lgpdRow').onclick=function(e){if(e.target.classList.contains('link'))return;tc('lgpdBox','lgpdCheck')};
-document.getElementById('joinRoomCheck').onchange=function(){document.getElementById('roomGroup').style.display=this.checked?'block':'none'};
-document.getElementById('loginBtn').onclick=function(){s.login()};
-document.getElementById('registerBtn').onclick=function(){s.register()};
-document.getElementById('skipBtn').onclick=function(){s.offlineMode=true;s.showEditor();s.toast('Modo offline')};
-document.getElementById('installBtn').onclick=function(){s.installApp()};
-document.getElementById('logoutBtn').onclick=function(){s.logout()};
-document.getElementById('runBtn').onclick=function(){s.runCode()};
-document.getElementById('downloadBtn').onclick=function(){s.download()};
-document.getElementById('fullscreenBtn').onclick=function(){s.fullscreen()};
-document.getElementById('configBtn').onclick=function(){document.getElementById('configModal').classList.add('show')};
-document.getElementById('membersBtn').onclick=function(){s.showMembers()};
-document.getElementById('copyRoomBtn').onclick=function(){s.copyRoomCode()};
-document.getElementById('roomBadge').onclick=function(){s.copyRoomCode()};
-document.getElementById('closeConfigBtn').onclick=function(){document.getElementById('configModal').classList.remove('show')};
-document.getElementById('closeMembersBtn').onclick=function(){document.getElementById('membersModal').classList.remove('show')};
-document.getElementById('closeLegalBtn').onclick=function(){document.getElementById('legalModal').classList.remove('show')};
-document.getElementById('closeFullscreenBtn').onclick=function(){document.getElementById('fullscreenModal').classList.remove('show')};
-document.getElementById('termsLink').onclick=function(e){e.stopPropagation();s.showLegal('terms')};
-document.getElementById('lgpdLink').onclick=function(e){e.stopPropagation();s.showLegal('lgpd')};
-document.getElementById('langSelect').onchange=function(){s.changeLang(this.value)};
-document.getElementById('themeSelect').onchange=function(){var t=document.getElementById('codeEditor');if(this.value==='light'){t.style.background='#fff';t.style.color='#000'}else{t.style.background='#0d0d0d';t.style.color='#0f0'}};
-document.getElementById('fontSizeSlider').oninput=function(){s.fontSize=parseInt(this.value);document.getElementById('fontSizeVal').textContent=s.fontSize+'px';document.getElementById('codeEditor').style.fontSize=s.fontSize+'px'};
-document.getElementById('codeEditor').addEventListener('input',function(){if(s.offlineMode||!s.roomId)return;clearTimeout(s.syncTimer);s.syncTimer=setTimeout(function(){s.syncTimer=null;db.collection('rooms').doc(s.roomId).update({code:document.getElementById('codeEditor').value,language:s.lang}).catch(function(){})},600)});
-document.querySelectorAll('.modal').forEach(function(m){m.onclick=function(e){if(e.target===m)m.classList.remove('show')}});
-document.onkeydown=function(e){if(e.key==='Escape')document.querySelectorAll('.modal.show').forEach(function(m){m.classList.remove('show')});if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();s.runCode()}};
-this.setupSplitter();setTimeout(function(){document.getElementById('loadingOverlay').classList.remove('show')},2000)},
-installApp:function(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(){deferredPrompt=null;APP.toast('✅ App instalado!')})}else if(window.matchMedia('(display-mode: standalone)').matches){APP.toast('📱 Já está instalado!')}else{APP.toast('📱 Use o menu do navegador → Adicionar à tela inicial')}},
-login:function(){if(!document.getElementById('lgpdCheck').checked){this.showError('Aceite os Termos e LGPD.');return}var email=document.getElementById('email').value.trim(),pass=document.getElementById('password').value;if(!email||!pass){this.showError('Preencha os campos.');return}this.showLoading(true);var s=this;var joinChecked=document.getElementById('joinRoomCheck').checked;var roomVal=(document.getElementById('roomId').value||'').trim();auth.signInWithEmailAndPassword(email,pass).then(function(r){s.user=r.user;if(joinChecked&&roomVal){return s.joinRoom(roomVal)}return s.createRoom()}).catch(function(e){s.showError(s.translateError(e));s.showLoading(false)})},
-register:function(){if(!document.getElementById('lgpdCheck').checked){this.showError('Aceite os Termos e LGPD.');return}var email=document.getElementById('email').value.trim(),pass=document.getElementById('password').value;if(!email||!pass){this.showError('Preencha os campos.');return}if(pass.length<6){this.showError('Senha: mínimo 6 caracteres.');return}this.showLoading(true);var s=this;var joinChecked=document.getElementById('joinRoomCheck').checked;var roomVal=(document.getElementById('roomId').value||'').trim();auth.createUserWithEmailAndPassword(email,pass).then(function(r){s.user=r.user;if(joinChecked&&roomVal){return s.joinRoom(roomVal)}return s.createRoom()}).catch(function(e){s.showError(s.translateError(e));s.showLoading(false)})},
-logout:function(){var s=this;if(this.unsub){this.unsub();this.unsub=null}if(this.previewUrl){URL.revokeObjectURL(this.previewUrl);this.previewUrl=null}if(this.offlineMode){s.user=null;s.roomId=null;s.offlineMode=false;document.getElementById('loginPage').style.display='flex';document.getElementById('editorPage').style.display='none';return}this.showLoading(true);auth.signOut().then(function(){s.user=null;s.roomId=null;s.isOwner=false;history.pushState({},'',location.pathname);document.getElementById('loginPage').style.display='flex';document.getElementById('editorPage').style.display='none';s.showLoading(false)})},
-createRoom:function(){var s=this;return db.collection('rooms').add({ownerId:this.user.uid,ownerEmail:this.user.email,members:[this.user.uid],memberEmails:{},code:T[this.lang]||'',language:this.lang,createdAt:firebase.firestore.FieldValue.serverTimestamp()}).then(function(doc){s.roomId=doc.id;s.isOwner=true;var u={};u['memberEmails.'+s.user.uid]=s.user.email;db.collection('rooms').doc(doc.id).update(u);history.pushState({},'','?room='+doc.id);s.showEditor();s.toast('✅ Sala criada! Código: '+doc.id);s.showLoading(false)}).catch(function(){s.showError('Erro.');s.showLoading(false)})},
-joinRoom:function(id){var s=this;return db.collection('rooms').doc(id).get().then(function(doc){if(!doc.exists){s.showError('Sala não encontrada.');s.showLoading(false);throw new Error('x')}var x=doc.data();if(x.members.includes(s.user.uid)){return x}var u={members:firebase.firestore.FieldValue.arrayUnion(s.user.uid)};u['memberEmails.'+s.user.uid]=s.user.email;return db.collection('rooms').doc(id).update(u).then(function(){return db.collection('rooms').doc(id).get()}).then(function(freshDoc){return freshDoc.data()})}).then(function(x){if(!x)return;s.roomId=id;s.isOwner=x.ownerId===s.user.uid;if(x.language){s.lang=x.language;document.getElementById('langSelect').value=x.language}document.getElementById('codeEditor').value=x.code||'';if(s.lang==='html')s.updatePreview(x.code||'');history.pushState({},'','?room='+id);s.showEditor();s.toast('✅ Entrou na sala!');s.showLoading(false)}).catch(function(e){if(e.message!=='x'){s.showError('Erro ao entrar.');s.showLoading(false)}})},
-showEditor:function(){document.getElementById('loginPage').style.display='none';document.getElementById('editorPage').style.display='flex';document.getElementById('roomBadge').textContent=this.offlineMode?'Offline':'Sala: '+(this.roomId?this.roomId.substring(0,10)+'...':'---');if(!this.offlineMode&&this.roomId)this.listenRoom()},
-listenRoom:function(){var s=this;if(this.unsub)this.unsub();this.unsub=db.collection('rooms').doc(this.roomId).onSnapshot(function(doc){if(!doc.exists){s.logout();return}var x=doc.data();if(!x.members.includes(s.user.uid)){alert('Removido.');s.logout();return}if(!s.syncTimer&&x.code!==document.getElementById('codeEditor').value){document.getElementById('codeEditor').value=x.code||'';if(s.lang==='html')s.updatePreview(x.code||'')}if(x.language&&x.language!==s.lang){s.lang=x.language;document.getElementById('langSelect').value=x.language;s.changeLang(x.language)}})},
-changeLang:function(l){this.lang=l;if(l==='html'){document.getElementById('previewContainer').style.display='block';document.getElementById('console').style.display='none'}else{document.getElementById('previewContainer').style.display='none';document.getElementById('console').style.display='block'}this.toast(l.toUpperCase())},
-updatePreview:function(c){if(this.previewUrl)URL.revokeObjectURL(this.previewUrl);this.previewUrl=URL.createObjectURL(new Blob([c],{type:'text/html'}));document.getElementById('previewFrame').src=this.previewUrl},
-runCode:function(){var c=document.getElementById('codeEditor').value;if(this.lang==='html'){this.updatePreview(c);document.getElementById('previewContainer').style.display='block';document.getElementById('console').style.display='none';return}document.getElementById('console').style.display='block';document.getElementById('previewContainer').style.display='none';var o=document.getElementById('console');o.className='';o.textContent='Executando...\n';if(this.lang==='javascript'){try{var out='';var ol=console.log;console.log=function(){for(var i=0;i<arguments.length;i++)out+=arguments[i]+' ';out+='\n'};eval(c);console.log=ol;o.textContent=out||'OK'}catch(e){o.textContent='Erro: '+e.message;o.className='error'}}else{o.textContent='Use HTML ou JavaScript.';o.className='warn'}},
-download:function(){var e={html:'.html',javascript:'.js',python:'.py'};var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([document.getElementById('codeEditor').value],{type:'text/plain'}));a.download='projeto'+(e[this.lang]||'.txt');a.click();this.toast('Baixado!')},
-fullscreen:function(){var b=new Blob([document.getElementById('codeEditor').value],{type:'text/html'});document.getElementById('fullscreenFrame').src=URL.createObjectURL(b);document.getElementById('fullscreenModal').classList.add('show')},
-copyRoomCode:function(){if(!this.roomId){this.toast('Nenhuma sala ativa');return}var code=this.roomId;if(navigator.clipboard){navigator.clipboard.writeText(code).then(function(){APP.toast('✅ Código copiado: '+code)})}else{var t=document.createElement('textarea');t.value=code;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);APP.toast('✅ Código copiado: '+code)}},
-showMembers:function(){if(!this.roomId){this.toast('Faça login primeiro');return}if(this.offlineMode){this.toast('Indisponível offline');return}var s=this;db.collection('rooms').doc(this.roomId).get().then(function(doc){var x=doc.data(),l=document.getElementById('membersList');l.innerHTML='';var oe=document.createElement('div');oe.className='member-item';oe.innerHTML='<span>👑 <b>'+x.ownerEmail+'</b></span><span style="color:#666;font-size:10px">DONO</span>';l.appendChild(oe);var me=x.memberEmails||{};x.members.forEach(function(uid){if(uid!==x.ownerId){var de=document.createElement('div');de.className='member-item';de.innerHTML='<span>👤 '+(me[uid]||uid.substring(0,8)+'...')+'</span>'+(s.isOwner?'<button class="remove-btn" onclick="APP.removeMember(\''+uid+'\')">Remover</button>':'');l.appendChild(de)}});if(x.members.length<=1){var emp=document.createElement('p');emp.style.cssText='color:#666;font-size:11px;text-align:center;padding:10px';emp.textContent='Nenhum outro membro';l.appendChild(emp)}document.getElementById('membersModal').classList.add('show')}).catch(function(){APP.toast('Erro ao carregar')})},
-removeMember:function(uid){if(!this.isOwner||!confirm('Remover este membro?'))return;var s=this,u={members:firebase.firestore.FieldValue.arrayRemove(uid)};u['memberEmails.'+uid]=firebase.firestore.FieldValue.delete();db.collection('rooms').doc(this.roomId).update(u).then(function(){s.toast('✅ Removido!');s.showMembers()})},
-showLegal:function(t){var x=document.getElementById('legalTitle'),y=document.getElementById('legalContent');if(t==='terms'){x.textContent='Termos';y.innerHTML='<p>1. Ao usar, concorda.</p>'}else{x.textContent='LGPD';y.innerHTML='<p>1. Dados protegidos.</p>'}document.getElementById('legalModal').classList.add('show')},
-setupSplitter:function(){var sp=document.getElementById('splitter'),ep=document.getElementById('editorPanel'),op=document.getElementById('outputPanel'),ma=document.getElementById('mainArea'),dr=false;sp.addEventListener('mousedown',function(){dr=true});sp.addEventListener('touchstart',function(){dr=true},{passive:true});document.addEventListener('mousemove',function(e){if(!dr)return;var r=ma.getBoundingClientRect();if(window.innerWidth<768){var v=Math.max(15,Math.min(85,((e.clientY-r.top)/r.height)*100));ep.style.flex='none';ep.style.height=v+'%';op.style.flex='none';op.style.height=(100-v)+'%'}else{var v=Math.max(15,Math.min(85,((e.clientX-r.left)/r.width)*100));ep.style.flex='none';ep.style.width=v+'%';op.style.flex='none';op.style.width=(100-v)+'%'}});document.addEventListener('touchmove',function(e){if(!dr)return;var r=ma.getBoundingClientRect(),v=Math.max(15,Math.min(85,((e.touches[0].clientY-r.top)/r.height)*100));ep.style.flex='none';ep.style.height=v+'%';op.style.flex='none';op.style.height=(100-v)+'%'},{passive:true});document.addEventListener('mouseup',function(){dr=false});document.addEventListener('touchend',function(){dr=false})},
-showError:function(m){var e=document.getElementById('errorMsg');e.textContent=m;e.style.display='block';setTimeout(function(){e.style.display='none'},4000)},
-toast:function(m){var x=document.querySelector('.toast');if(x)x.remove();var e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);setTimeout(function(){e.style.opacity='0';e.style.transition='opacity .3s';setTimeout(function(){if(e.parentNode)e.remove()},300)},2000)},
-showLoading:function(s){document.getElementById('loadingOverlay').classList.toggle('show',s)},
-translateError:function(e){var m={'auth/email-already-in-use':'Email já cadastrado.','auth/invalid-email':'Email inválido.','auth/weak-password':'Senha fraca.','auth/user-not-found':'Usuário não encontrado.','auth/wrong-password':'Senha incorreta.','auth/too-many-requests':'Muitas tentativas.','auth/network-request-failed':'Sem conexão.'};return m[e.code]||e.message}};
-window.APP=APP;APP.init();
+firebase.initializeApp({
+  apiKey:"AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",
+  authDomain:"codeverse-14794.firebaseapp.com",
+  projectId:"codeverse-14794",
+  storageBucket:"codeverse-14794.firebasestorage.app",
+  messagingSenderId:"307083349125",
+  appId:"1:307083349125:web:11b96a4c3fd856d6236dec"
+});
+var auth = firebase.auth(), db = firebase.firestore();
+
+var CURSOR_COLORS = ['#388bfd','#3fb950','#f78166','#a371f7','#d29922','#39d353'];
+var LANG_MAP = {js:'javascript',ts:'typescript',html:'html',css:'css',py:'python',json:'json',md:'markdown',txt:'text',jsx:'javascript',vue:'html'};
+var DEFAULT_CODE = {
+  html:'<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <style>\n    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }\n    h1 { color: #333; }\n  </style>\n</head>\n<body>\n  <h1>🚀 Olá!</h1>\n  <p>Editando em tempo real.</p>\n</body>\n</html>',
+  js:'// JavaScript\nconsole.log("Hello, World!");\n',
+  py:'# Python\nprint("Hello, World!")\n',
+  css:'/* CSS */\nbody {\n  font-family: sans-serif;\n  padding: 20px;\n}\n'
+};
+
+var APP = {
+  user: null,
+  currentRepo: null,
+  currentFile: null,
+  openTabs: [],
+  unsubs: [],
+  syncTimer: null,
+  cursorTimer: null,
+  isSyncing: false,
+  presenceUnsub: null,
+  onlineUsers: {},
+
+  init: function() {
+    var s = this;
+    this.bindAuth();
+    this.bindUI();
+    auth.onAuthStateChanged(function(u) {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      if (u) {
+        s.user = u;
+        s.onLogin();
+      } else {
+        s.showAuth();
+      }
+    });
+  },
+
+  bindAuth: function() {
+    var s = this;
+    function toggle(boxId, checkId, cb) {
+      var box = document.getElementById(boxId), chk = document.getElementById(checkId);
+      document.getElementById(boxId).parentElement.onclick = function(e) {
+        if (e.target.classList.contains('link')) return;
+        chk.checked = !chk.checked;
+        box.classList.toggle('on', chk.checked);
+        if (cb) cb(chk.checked);
+      };
+    }
+    toggle('joinBox','joinCheck', function(v) {
+      document.getElementById('roomInputWrap').style.display = v ? 'block' : 'none';
+    });
+    toggle('lgpdBox','lgpdCheck');
+    document.getElementById('loginBtn').onclick = function() { s.doLogin(); };
+    document.getElementById('registerBtn').onclick = function() { s.doRegister(); };
+    document.getElementById('password').onkeydown = function(e) { if(e.key==='Enter') s.doLogin(); };
+  },
+
+  bindUI: function() {
+    var s = this;
+    document.getElementById('logoutBtn').onclick = function() { s.logout(); };
+    document.getElementById('navLogoBtn').onclick = function() { s.showDash(); };
+    document.getElementById('newRepoBtn').onclick = function() { s.openNewRepoModal(); };
+    document.getElementById('newRepoBtnDash').onclick = function() { s.openNewRepoModal(); };
+    document.getElementById('cancelRepoBtn').onclick = function() { document.getElementById('newRepoModal').classList.remove('show'); };
+    document.getElementById('createRepoBtn').onclick = function() { s.createRepo(); };
+    document.getElementById('repoNameInput').onkeydown = function(e) { if(e.key==='Enter') s.createRepo(); };
+    document.getElementById('membersBtn').onclick = function() { s.showMembers(); };
+    document.getElementById('closeMembersBtn').onclick = function() { document.getElementById('membersModal').classList.remove('show'); };
+    document.getElementById('runBtn').onclick = function() { s.runCode(); };
+    document.getElementById('newFileBtn').onclick = function() { s.showNewFileInput(); };
+    document.getElementById('collabId').onclick = function() { s.copyRepoId(); };
+    document.getElementById('tabConsole').onclick = function() { s.switchOutput('console'); };
+    document.getElementById('tabPreview').onclick = function() { s.switchOutput('preview'); };
+    document.querySelectorAll('.modal-overlay').forEach(function(m) {
+      m.onclick = function(e) { if(e.target===m) m.classList.remove('show'); };
+    });
+    document.getElementById('newFileInput').onkeydown = function(e) {
+      if(e.key==='Enter') s.createFile(this.value.trim());
+      if(e.key==='Escape') s.hideNewFileInput();
+    };
+    document.getElementById('codeEditor').addEventListener('input', function() {
+      s.onEditorInput();
+    });
+    document.getElementById('codeEditor').addEventListener('keyup', function() {
+      s.broadcastCursor();
+    });
+    document.getElementById('codeEditor').addEventListener('click', function() {
+      s.broadcastCursor();
+    });
+    this.setupSplitter();
+    document.onkeydown = function(e) {
+      if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();s.runCode();}
+      if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();s.forceSave();}
+    };
+  },
+
+  showAuth: function() {
+    document.getElementById('authPage').style.display = 'flex';
+    document.getElementById('appPage').style.display = 'none';
+  },
+  onLogin: function() {
+    document.getElementById('authPage').style.display = 'none';
+    document.getElementById('appPage').style.display = 'flex';
+    var av = document.getElementById('userAvatar');
+    av.textContent = this.user.email[0].toUpperCase();
+    av.title = this.user.email;
+    this.showDash();
+    var params = new URLSearchParams(location.search);
+    if (params.get('repo')) this.openRepo(params.get('repo'));
+  },
+  doLogin: function() {
+    var s = this;
+    if (!document.getElementById('lgpdCheck').checked) return this.showErr('Aceite os Termos de Uso.');
+    var email = document.getElementById('email').value.trim();
+    var pass = document.getElementById('password').value;
+    if (!email||!pass) return this.showErr('Preencha todos os campos.');
+    var join = document.getElementById('joinCheck').checked;
+    var roomId = (document.getElementById('roomIdInput').value||'').trim();
+    auth.signInWithEmailAndPassword(email, pass).then(function(r) {
+      s.user = r.user;
+      if (join && roomId) return s.joinRepo(roomId);
+    }).catch(function(e) { s.showErr(s.xlateErr(e)); });
+  },
+  doRegister: function() {
+    var s = this;
+    if (!document.getElementById('lgpdCheck').checked) return this.showErr('Aceite os Termos de Uso.');
+    var email = document.getElementById('email').value.trim();
+    var pass = document.getElementById('password').value;
+    if (!email||!pass) return this.showErr('Preencha todos os campos.');
+    if (pass.length < 6) return this.showErr('Senha: mínimo 6 caracteres.');
+    var join = document.getElementById('joinCheck').checked;
+    var roomId = (document.getElementById('roomIdInput').value||'').trim();
+    auth.createUserWithEmailAndPassword(email, pass).then(function(r) {
+      s.user = r.user;
+      if (join && roomId) return s.joinRepo(roomId);
+    }).catch(function(e) { s.showErr(s.xlateErr(e)); });
+  },
+  logout: function() {
+    var s = this;
+    this.cleanup();
+    auth.signOut().then(function() {
+      s.user = null;
+      s.currentRepo = null;
+      s.currentFile = null;
+      s.openTabs = [];
+      history.pushState({},'',location.pathname);
+      s.showAuth();
+    });
+  },
+
+  showDash: function() {
+    var s = this;
+    this.cleanup();
+    this.currentRepo = null;
+    this.currentFile = null;
+    this.openTabs = [];
+    document.getElementById('dashPage').style.display = 'block';
+    document.getElementById('editorPage').style.display = 'none';
+    document.getElementById('collabBar').style.display = 'none';
+    document.getElementById('navRepoName').style.display = 'none';
+    document.getElementById('membersBtn').style.display = 'none';
+    history.pushState({},'',location.pathname);
+    this.loadRepos();
+  },
+  loadRepos: function() {
+    var s = this;
+    db.collection('repos')
+      .where('members','array-contains', this.user.uid)
+      .orderBy('updatedAt','desc')
+      .get().then(function(snap) {
+        var grid = document.getElementById('repoGrid');
+        if (snap.empty) {
+          grid.innerHTML = '<div class="empty-state"><h3>Nenhum repositório ainda</h3><p>Crie seu primeiro repositório para começar a colaborar</p></div>';
+          return;
+        }
+        grid.innerHTML = '';
+        snap.forEach(function(doc) {
+          var d = doc.data();
+          var card = document.createElement('div');
+          card.className = 'repo-card';
+          var fileCount = d.fileCount || 0;
+          var isOwner = d.ownerId === s.user.uid;
+          var memberCount = (d.members||[]).length;
+          card.innerHTML =
+            '<div class="repo-card-header">' +
+              '<div class="repo-name">' +
+                '<svg width="14" height="14" viewBox="0 0 16 16" fill="var(--accent)"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8z"/></svg>' +
+                d.name +
+              '</div>' +
+              '<span class="repo-visibility">' + (isOwner ? 'Dono' : 'Colaborador') + '</span>' +
+            '</div>' +
+            '<div class="repo-desc">' + (d.description || 'Sem descrição') + '</div>' +
+            '<div class="repo-meta">' +
+              '<span class="repo-meta-item"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 1.75a.25.25 0 00-.25.25v11c0 .138.112.25.25.25h13a.25.25 0 00.25-.25V7a.25.25 0 00-.25-.25h-6.5a.75.75 0 01-.53-.22L5.22 4.28a.25.25 0 00-.177-.03z"/></svg> ' + fileCount + ' arquivo' + (fileCount!==1?'s':'') + '</span>' +
+              '<span class="repo-meta-item"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 3.5a2 2 0 100 4 2 2 0 000-4z"/><path d="M2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.001 4.001 0 00-7.9 0 .75.75 0 01-1.482-.236A5.507 5.507 0 013.102 8.05 3.49 3.49 0 012 5.5z"/></svg> ' + memberCount + ' membro' + (memberCount!==1?'s':'') + '</span>' +
+            '</div>';
+          card.onclick = function() { s.openRepo(doc.id); };
+          grid.appendChild(card);
+        });
+      }).catch(function(e) { s.toast('Erro ao carregar repositórios: ' + e.message, 'err'); });
+  },
+
+  openNewRepoModal: function() {
+    document.getElementById('repoNameInput').value = '';
+    document.getElementById('repoDescInput').value = '';
+    document.getElementById('newRepoModal').classList.add('show');
+    setTimeout(function() { document.getElementById('repoNameInput').focus(); }, 100);
+  },
+  createRepo: function() {
+    var s = this;
+    var name = document.getElementById('repoNameInput').value.trim().replace(/\s+/g,'-').toLowerCase();
+    var desc = document.getElementById('repoDescInput').value.trim();
+    if (!name) return;
+    document.getElementById('newRepoModal').classList.remove('show');
+    var me = {};
+    me['memberEmails.' + this.user.uid] = this.user.email;
+    db.collection('repos').add({
+      name: name,
+      description: desc,
+      ownerId: this.user.uid,
+      ownerEmail: this.user.email,
+      members: [this.user.uid],
+      memberEmails: {},
+      fileCount: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(doc) {
+      var u = {}; u['memberEmails.' + s.user.uid] = s.user.email;
+      doc.update(u);
+      s.toast('✅ Repositório "' + name + '" criado!');
+      s.openRepo(doc.id);
+    });
+  },
+
+  joinRepo: function(id) {
+    var s = this;
+    return db.collection('repos').doc(id).get().then(function(doc) {
+      if (!doc.exists) { s.toast('Repositório não encontrado.', 'err'); return; }
+      var d = doc.data();
+      if (d.members.includes(s.user.uid)) { s.openRepo(id); return; }
+      var u = { members: firebase.firestore.FieldValue.arrayUnion(s.user.uid) };
+      u['memberEmails.' + s.user.uid] = s.user.email;
+      return doc.ref.update(u).then(function() { s.openRepo(id); });
+    });
+  },
+
+  openRepo: function(repoId) {
+    var s = this;
+    db.collection('repos').doc(repoId).get().then(function(doc) {
+      if (!doc.exists) { s.toast('Repositório não encontrado.', 'err'); return; }
+      s.currentRepo = { id: doc.id, ...doc.data() };
+      document.getElementById('dashPage').style.display = 'none';
+      document.getElementById('editorPage').style.display = 'flex';
+      document.getElementById('collabBar').style.display = 'flex';
+      document.getElementById('navRepoName').style.display = 'flex';
+      document.getElementById('membersBtn').style.display = 'flex';
+      document.getElementById('navRepoTitle').textContent = s.currentRepo.name;
+      document.getElementById('collabId').textContent = repoId;
+      document.getElementById('fileTree').innerHTML = '';
+      document.getElementById('editorTabs').innerHTML = '<div style="display:flex;align-items:center;color:var(--text3);font-size:12px;padding:0 8px">Selecione um arquivo</div>';
+      document.getElementById('codeEditor').value = '';
+      document.getElementById('codeEditor').placeholder = 'Selecione um arquivo para editar...';
+      s.openTabs = [];
+      s.currentFile = null;
+      history.pushState({},'','?repo='+repoId);
+      s.listenFiles();
+      s.listenPresence();
+    });
+  },
+
+  listenFiles: function() {
+    var s = this;
+    var unsub = db.collection('repos').doc(s.currentRepo.id)
+      .collection('files').orderBy('name').onSnapshot(function(snap) {
+        s.renderFileTree(snap);
+      });
+    this.unsubs.push(unsub);
+  },
+  renderFileTree: function(snap) {
+    var s = this;
+    var tree = document.getElementById('fileTree');
+    tree.innerHTML = '';
+    if (snap.empty) {
+      tree.innerHTML = '<div class="sidebar-empty">Nenhum arquivo.<br>Clique em ＋ para criar.</div>';
+      return;
+    }
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      var ext = d.name.split('.').pop().toLowerCase();
+      var icon = {js:'📜',ts:'📘',html:'🌐',css:'🎨',py:'🐍',json:'📋',md:'📝',txt:'📄'}[ext] || '📄';
+      var item = document.createElement('div');
+      item.className = 'file-tree-item' + (s.currentFile&&s.currentFile.id===doc.id?' active':'');
+      item.dataset.id = doc.id;
+      item.innerHTML =
+        '<span class="file-icon">' + icon + '</span>' +
+        '<span class="file-name">' + d.name + '</span>' +
+        '<div class="file-actions">' +
+          '<button class="file-del" title="Excluir">✕</button>' +
+        '</div>';
+      item.querySelector('.file-name').onclick = function(e) { e.stopPropagation(); s.openFile(doc.id, d); };
+      item.querySelector('.file-del').onclick = function(e) { e.stopPropagation(); s.deleteFile(doc.id, d.name); };
+      item.onclick = function() { s.openFile(doc.id, d); };
+      tree.appendChild(item);
+    });
+  },
+  showNewFileInput: function() {
+    document.getElementById('newFileRow').style.display = 'block';
+    document.getElementById('newFileInput').value = '';
+    document.getElementById('newFileInput').focus();
+  },
+  hideNewFileInput: function() {
+    document.getElementById('newFileRow').style.display = 'none';
+  },
+  createFile: function(name) {
+    var s = this;
+    if (!name) return;
+    if (!name.includes('.')) name += '.js';
+    this.hideNewFileInput();
+    var ext = name.split('.').pop().toLowerCase();
+    var code = DEFAULT_CODE[ext] || '// ' + name + '\n';
+    db.collection('repos').doc(this.currentRepo.id).collection('files').add({
+      name: name,
+      content: code,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(ref) {
+      db.collection('repos').doc(s.currentRepo.id).update({
+        fileCount: firebase.firestore.FieldValue.increment(1),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      s.openFile(ref.id, { name: name, content: code });
+    });
+  },
+  deleteFile: function(fileId, name) {
+    var s = this;
+    if (!confirm('Excluir "' + name + '"?')) return;
+    db.collection('repos').doc(this.currentRepo.id).collection('files').doc(fileId).delete().then(function() {
+      db.collection('repos').doc(s.currentRepo.id).update({
+        fileCount: firebase.firestore.FieldValue.increment(-1),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      if (s.currentFile && s.currentFile.id === fileId) {
+        s.currentFile = null;
+        document.getElementById('codeEditor').value = '';
+        s.openTabs = s.openTabs.filter(function(t) { return t.id !== fileId; });
+        s.renderTabs();
+      }
+      s.toast('Arquivo excluído.');
+    });
+  },
+
+  openFile: function(fileId, data) {
+    var s = this;
+    if (this.fileUnsub) { this.fileUnsub(); this.fileUnsub = null; }
+    document.querySelectorAll('.file-tree-item').forEach(function(el) {
+      el.classList.toggle('active', el.dataset.id === fileId);
+    });
+    this.currentFile = { id: fileId, name: data.name };
+    if (!this.openTabs.find(function(t) { return t.id === fileId; })) {
+      this.openTabs.push({ id: fileId, name: data.name });
+    }
+    this.renderTabs();
+    document.getElementById('codeEditor').value = data.content || '';
+    document.getElementById('codeEditor').disabled = false;
+    document.getElementById('codeEditor').placeholder = '';
+    var ext = data.name.split('.').pop().toLowerCase();
+    document.getElementById('langBadge').textContent = LANG_MAP[ext] || ext;
+    this.fileUnsub = db.collection('repos').doc(this.currentRepo.id)
+      .collection('files').doc(fileId).onSnapshot(function(doc) {
+        if (!doc.exists) return;
+        var d = doc.data();
+        if (!s.syncTimer && d.content !== document.getElementById('codeEditor').value) {
+          var ed = document.getElementById('codeEditor');
+          var sel = [ed.selectionStart, ed.selectionEnd];
+          ed.value = d.content || '';
+          try { ed.setSelectionRange(sel[0], sel[1]); } catch(e){}
+        }
+      });
+  },
+  renderTabs: function() {
+    var s = this;
+    var bar = document.getElementById('editorTabs');
+    bar.innerHTML = '';
+    this.openTabs.forEach(function(t) {
+      var tab = document.createElement('div');
+      tab.className = 'tab' + (s.currentFile&&s.currentFile.id===t.id?' active':'');
+      var ext = t.name.split('.').pop().toLowerCase();
+      var icon = {js:'📜',html:'🌐',css:'🎨',py:'🐍',json:'📋',md:'📝'}[ext]||'📄';
+      tab.innerHTML = '<span>' + icon + ' ' + t.name + '</span><span class="tab-close">✕</span>';
+      tab.querySelector('span:first-child').onclick = function() {
+        db.collection('repos').doc(s.currentRepo.id).collection('files').doc(t.id).get().then(function(doc) {
+          if (doc.exists) s.openFile(doc.id, doc.data());
+        });
+      };
+      tab.querySelector('.tab-close').onclick = function(e) {
+        e.stopPropagation();
+        s.openTabs = s.openTabs.filter(function(x) { return x.id !== t.id; });
+        if (s.currentFile && s.currentFile.id === t.id) {
+          s.currentFile = null;
+          document.getElementById('codeEditor').value = '';
+          document.getElementById('codeEditor').placeholder = 'Selecione um arquivo para editar...';
+          if (s.fileUnsub) { s.fileUnsub(); s.fileUnsub = null; }
+        }
+        s.renderTabs();
+      };
+      bar.appendChild(tab);
+    });
+    if (!this.openTabs.length) {
+      bar.innerHTML = '<div style="display:flex;align-items:center;color:var(--text3);font-size:12px;padding:0 8px">Selecione um arquivo</div>';
+    }
+  },
+
+  onEditorInput: function() {
+    var s = this;
+    if (!this.currentRepo || !this.currentFile) return;
+    this.setSyncState('syncing');
+    clearTimeout(this.syncTimer);
+    this.syncTimer = setTimeout(function() {
+      s.syncTimer = null;
+      var content = document.getElementById('codeEditor').value;
+      db.collection('repos').doc(s.currentRepo.id)
+        .collection('files').doc(s.currentFile.id)
+        .update({
+          content: content,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+          s.setSyncState('ok');
+          db.collection('repos').doc(s.currentRepo.id).update({
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }).catch(function() { s.setSyncState('err'); });
+    }, 150);
+  },
+  forceSave: function() {
+    clearTimeout(this.syncTimer);
+    this.syncTimer = null;
+    this.onEditorInput();
+  },
+  setSyncState: function(state) {
+    var dot = document.getElementById('syncDot');
+    var label = document.getElementById('syncLabel');
+    dot.className = 'sync-dot' + (state==='syncing'?' syncing':state==='err'?' offline':'');
+    label.textContent = state==='syncing'?'Salvando...':state==='err'?'Erro ao salvar':'Sincronizado';
+  },
+
+  listenPresence: function() {
+    var s = this;
+    if (this.presenceUnsub) this.presenceUnsub();
+    var presenceRef = db.collection('repos').doc(this.currentRepo.id)
+      .collection('presence').doc(this.user.uid);
+    presenceRef.set({
+      email: this.user.email,
+      online: true,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+      cursor: null,
+      fileId: null
+    });
+    this.presenceUnsub = db.collection('repos').doc(this.currentRepo.id)
+      .collection('presence').onSnapshot(function(snap) {
+        s.onlineUsers = {};
+        snap.forEach(function(doc) {
+          if (doc.id !== s.user.uid) {
+            s.onlineUsers[doc.id] = doc.data();
+          }
+        });
+        s.renderPresence();
+        s.renderRemoteCursors();
+      });
+    window.addEventListener('beforeunload', function() {
+      presenceRef.update({ online: false, cursor: null });
+    });
+    this.unsubs.push(function() {
+      presenceRef.update({ online: false, cursor: null });
+    });
+  },
+  broadcastCursor: function() {
+    var s = this;
+    if (!this.currentRepo || !this.currentFile) return;
+    clearTimeout(this.cursorTimer);
+    this.cursorTimer = setTimeout(function() {
+      var ed = document.getElementById('codeEditor');
+      var pos = s.getCaretCoords(ed);
+      db.collection('repos').doc(s.currentRepo.id)
+        .collection('presence').doc(s.user.uid).update({
+          cursor: pos,
+          fileId: s.currentFile.id,
+          lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(function(){});
+    }, 50);
+  },
+  getCaretCoords: function(el) {
+    var val = el.value;
+    var pos = el.selectionStart;
+    var lines = val.substring(0, pos).split('\n');
+    var line = lines.length - 1;
+    var col = lines[lines.length-1].length;
+    return { line: line, col: col, pos: pos };
+  },
+  renderPresence: function() {
+    var bar = document.getElementById('presenceBar');
+    bar.innerHTML = '';
+    var colors = CURSOR_COLORS;
+    var i = 0;
+    for (var uid in this.onlineUsers) {
+      var u = this.onlineUsers[uid];
+      if (!u.online) continue;
+      var dot = document.createElement('div');
+      dot.className = 'presence-dot';
+      dot.style.background = colors[i % colors.length];
+      dot.textContent = u.email[0].toUpperCase();
+      dot.title = u.email;
+      bar.appendChild(dot);
+      i++;
+    }
+  },
+  renderRemoteCursors: function() {
+    var s = this;
+    var layer = document.getElementById('cursorLayer');
+    layer.innerHTML = '';
+    var ed = document.getElementById('codeEditor');
+    var colors = CURSOR_COLORS;
+    var i = 0;
+    for (var uid in this.onlineUsers) {
+      var u = this.onlineUsers[uid];
+      if (!u.online || !u.cursor || u.fileId !== (s.currentFile&&s.currentFile.id)) { i++; continue; }
+      var color = colors[i % colors.length];
+      var lineH = 20.8;
+      var charW = 7.8;
+      var padTop = 16, padLeft = 16;
+      var x = padLeft + u.cursor.col * charW;
+      var y = padTop + u.cursor.line * lineH;
+      var cur = document.createElement('div');
+      cur.className = 'remote-cursor';
+      cur.style.cssText = 'left:' + x + 'px;top:' + y + 'px;height:' + lineH + 'px;width:2px;background:' + color + ';position:absolute';
+      var label = document.createElement('div');
+      label.className = 'remote-cursor-label';
+      label.style.cssText = 'position:absolute;top:-18px;left:0;background:' + color + ';color:#fff;font-size:10px;padding:1px 5px;border-radius:3px;white-space:nowrap;font-family:var(--font-ui)';
+      label.textContent = u.email.split('@')[0];
+      cur.appendChild(label);
+      layer.appendChild(cur);
+      i++;
+    }
+  },
+
+  showMembers: function() {
+    var s = this;
+    if (!this.currentRepo) return;
+    var list = document.getElementById('membersList');
+    list.innerHTML = '';
+    var colors = CURSOR_COLORS;
+    var i = 0;
+    var emails = this.currentRepo.memberEmails || {};
+    (this.currentRepo.members||[]).forEach(function(uid) {
+      var email = emails[uid] || uid.substring(0,8)+'...';
+      var isOwner = uid === s.currentRepo.ownerId;
+      var isOnline = s.onlineUsers[uid] && s.onlineUsers[uid].online;
+      var row = document.createElement('div');
+      row.className = 'member-row';
+      row.innerHTML =
+        '<div class="member-avatar" style="background:' + colors[i%colors.length] + '">' + email[0].toUpperCase() + '</div>' +
+        '<div class="member-email">' + email + '</div>' +
+        '<div class="member-role">' + (isOwner?'👑 Dono':'Colaborador') + '</div>' +
+        '<div class="member-online' + (isOnline?'':' offline') + '" title="' + (isOnline?'Online':'Offline') + '"></div>';
+      list.appendChild(row);
+      i++;
+    });
+    document.getElementById('membersModal').classList.add('show');
+  },
+
+  runCode: function() {
+    var code = document.getElementById('codeEditor').value;
+    var file = this.currentFile;
+    if (!file) return;
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'html') {
+      this.switchOutput('preview');
+      var blob = new Blob([code], {type:'text/html'});
+      document.getElementById('previewOut').src = URL.createObjectURL(blob);
+      return;
+    }
+    this.switchOutput('console');
+    var out = document.getElementById('consoleOut');
+    out.textContent = '';
+    if (ext === 'js') {
+      try {
+        var log = '';
+        var origLog = console.log, origErr = console.error;
+        console.log = function() { log += Array.from(arguments).join(' ') + '\n'; };
+        console.error = function() { log += '❌ ' + Array.from(arguments).join(' ') + '\n'; };
+        eval(code);
+        console.log = origLog; console.error = origErr;
+        out.textContent = log || '✅ Executado sem saída.';
+      } catch(e) { out.textContent = '❌ ' + e.message; }
+    } else {
+      out.textContent = '▶ Execute arquivos .js ou .html\nOutras linguagens requerem backend.';
+    }
+  },
+  switchOutput: function(tab) {
+    document.getElementById('tabConsole').classList.toggle('active', tab==='console');
+    document.getElementById('tabPreview').classList.toggle('active', tab==='preview');
+    document.getElementById('consoleOut').style.display = tab==='console'?'block':'none';
+    document.getElementById('previewOut').style.display = tab==='preview'?'block':'none';
+  },
+
+  copyRepoId: function() {
+    var id = this.currentRepo ? this.currentRepo.id : '';
+    if (!id) return;
+    navigator.clipboard ? navigator.clipboard.writeText(id).then(function() { APP.toast('✅ ID copiado! Cole no login para convidar.'); }) : this.toast('Copie: ' + id);
+  },
+
+  setupSplitter: function() {
+    var sp = document.getElementById('splitterH');
+    var op = document.getElementById('outputPanel');
+    var ea = document.querySelector('.editor-area');
+    var dr = false, startY, startH;
+    sp.onmousedown = function(e) {
+      dr = true; startY = e.clientY; startH = op.offsetHeight;
+      sp.classList.add('dragging');
+      document.body.style.userSelect = 'none';
+    };
+    document.onmousemove = function(e) {
+      if (!dr) return;
+      var h = Math.max(60, Math.min(600, startH + (startY - e.clientY)));
+      op.style.height = h + 'px';
+    };
+    document.onmouseup = function() {
+      dr = false; sp.classList.remove('dragging');
+      document.body.style.userSelect = '';
+    };
+  },
+
+  cleanup: function() {
+    this.unsubs.forEach(function(u) { if(typeof u === 'function') u(); });
+    this.unsubs = [];
+    if (this.presenceUnsub) { this.presenceUnsub(); this.presenceUnsub = null; }
+    if (this.fileUnsub) { this.fileUnsub(); this.fileUnsub = null; }
+    clearTimeout(this.syncTimer); this.syncTimer = null;
+  },
+
+  toast: function(msg, type) {
+    var t = document.createElement('div');
+    t.className = 'toast';
+    if (type==='err') t.style.borderColor = 'rgba(248,81,73,.4)';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function() { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(function(){t.remove()},300); }, 3000);
+  },
+  showErr: function(msg) {
+    var e = document.getElementById('errMsg');
+    e.textContent = msg; e.style.display = 'block';
+    setTimeout(function(){e.style.display='none';}, 4000);
+  },
+  xlateErr: function(e) {
+    return ({'auth/email-already-in-use':'Email já cadastrado.','auth/invalid-email':'Email inválido.','auth/weak-password':'Senha fraca (mín. 6 caracteres).','auth/user-not-found':'Usuário não encontrado.','auth/wrong-password':'Senha incorreta.','auth/too-many-requests':'Muitas tentativas. Tente mais tarde.','auth/network-request-failed':'Sem conexão com a internet.'}[e.code]) || e.message;
+  }
+};
+
+window.APP = APP;
+APP.init();
 </script>
 </body>
 </html>
