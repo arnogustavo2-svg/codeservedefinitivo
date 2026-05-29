@@ -91,8 +91,15 @@ html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);heig
 .sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .2s}
 .sidebar.collapsed{width:0;min-width:0}
 .sidebar-header{padding:12px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.sidebar-header h3{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.sidebar-header h3{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden}
 .sidebar-actions{display:flex;gap:4px}
+.sidebar-toggle-btn{width:24px;height:24px;background:transparent;border:none;color:var(--text2);cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s;flex-shrink:0}
+.sidebar-toggle-btn:hover{background:var(--border);color:var(--text)}
+.sidebar.collapsed .sidebar-header h3,.sidebar.collapsed .sidebar-actions,.sidebar.collapsed .sidebar-section,.sidebar.collapsed .new-file-row{display:none}
+.sidebar.collapsed .sidebar-header{justify-content:center;padding:12px 8px}
+.sidebar-collapsed-icon{display:none;font-size:16px}
+.sidebar.collapsed .sidebar-collapsed-icon{display:flex;align-items:center;justify-content:center;padding:8px 0;color:var(--text2);cursor:pointer;width:100%}
+.sidebar.collapsed .sidebar-collapsed-icon:hover{color:var(--text)}
 .icon-btn{width:24px;height:24px;background:transparent;border:none;color:var(--text2);cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
 .icon-btn:hover{background:var(--border);color:var(--text)}
 .sidebar-section{padding:8px 0;flex:1;overflow-y:auto}
@@ -177,6 +184,16 @@ html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);heig
 #loadingOverlay{display:flex;position:fixed;inset:0;background:var(--bg);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:16px}
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
 #loadingOverlay span{font-size:13px;color:var(--text2)}
+#fullPreviewOverlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;flex-direction:column}
+#fullPreviewOverlay.show{display:flex}
+#fullPreviewOverlay .fpo-bar{height:40px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
+#fullPreviewOverlay .fpo-title{font-size:13px;color:var(--text2);font-family:var(--font-mono);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fullPreviewOverlay .fpo-live{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green)}
+#fullPreviewOverlay .fpo-close{padding:4px 12px;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:var(--radius);font-size:12px;cursor:pointer;font-family:var(--font-ui)}
+#fullPreviewOverlay .fpo-close:hover{border-color:var(--red);color:var(--red)}
+#fullPreviewIframe{flex:1;border:none;background:#fff}
+.nav-btn.back-btn{border-color:rgba(56,139,253,.4);color:var(--accent)}
+.nav-btn.back-btn:hover{background:rgba(56,139,253,.1);color:var(--text)}
 .collab-bar{height:36px;background:rgba(56,139,253,.06);border-bottom:1px solid rgba(56,139,253,.15);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
 .collab-id{font-family:var(--font-mono);font-size:12px;color:var(--accent);background:rgba(56,139,253,.1);padding:3px 10px;border-radius:4px;cursor:pointer;border:1px solid rgba(56,139,253,.2)}
 .collab-id:hover{background:rgba(56,139,253,.2)}
@@ -278,8 +295,10 @@ html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);heig
           <h3>Arquivos</h3>
           <div class="sidebar-actions">
             <button class="icon-btn" id="newFileBtn" title="Novo arquivo">＋</button>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="APP.toggleSidebar()" title="Minimizar/expandir">◀</button>
           </div>
         </div>
+        <div class="sidebar-collapsed-icon" onclick="APP.toggleSidebar()" title="Expandir arquivos">📁</div>
         <div class="sidebar-section" id="fileTree"></div>
         <div class="new-file-row" id="newFileRow" style="display:none">
           <input class="new-file-input" id="newFileInput" placeholder="nome.js">
@@ -291,6 +310,9 @@ html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);heig
           <div style="display:flex;align-items:center;color:var(--text3);font-size:12px;padding:0 8px">Selecione um arquivo</div>
         </div>
         <div class="editor-toolbar">
+          <button class="nav-btn" id="backToReposBtn" title="Voltar aos repositórios" style="margin-right:4px">
+            ← Repositórios
+          </button>
           <span class="lang-badge" id="langBadge">—</span>
           <button class="run-btn" id="runBtn">▶ Executar</button>
           <button class="run-btn" id="downloadBtn" style="background:var(--accent);margin-left:4px">⬇ Baixar</button>
@@ -308,6 +330,7 @@ html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);heig
           <div class="output-tabs">
             <div class="out-tab active" id="tabConsole">Console</div>
             <div class="out-tab" id="tabPreview">Preview</div>
+            <div class="out-tab" id="tabFullPreview" style="margin-left:auto;color:var(--text3)" title="Preview em tela cheia">⛶ Tela cheia</div>
           </div>
           <div class="out-content">
             <div id="consoleOut">// ▶ Execute o código para ver a saída</div>
@@ -339,6 +362,15 @@ html,body{font-family:var(--font-ui);background:var(--bg);color:var(--text);heig
       <button class="btn btn-ghost btn-sm" id="closeMembersBtn">Fechar</button>
     </div>
   </div>
+</div>
+
+<div id="fullPreviewOverlay">
+  <div class="fpo-bar">
+    <span class="fpo-title" id="fpoTitle">Preview</span>
+    <span class="fpo-live"><span class="sync-dot" style="background:var(--green);animation:pulse 2s infinite;display:inline-block"></span> Ao vivo</span>
+    <button class="fpo-close" onclick="APP.closeFullPreview()">✕ Fechar (ESC)</button>
+  </div>
+  <iframe id="fullPreviewIframe" sandbox="allow-scripts allow-same-origin"></iframe>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -429,6 +461,9 @@ var APP = {
     document.getElementById('collabId').onclick = function() { s.copyRepoId(); };
     document.getElementById('tabConsole').onclick = function() { s.switchOutput('console'); };
     document.getElementById('tabPreview').onclick = function() { s.switchOutput('preview'); };
+    document.getElementById('backToReposBtn').onclick = function() { s.showDash(); };
+    document.getElementById('tabFullPreview').onclick = function() { s.openFullPreview(); };
+    document.getElementById('backToReposBtn').className = 'nav-btn back-btn';
     document.querySelectorAll('.modal-overlay').forEach(function(m) {
       m.onclick = function(e) { if(e.target===m) m.classList.remove('show'); };
     });
@@ -449,6 +484,10 @@ var APP = {
     document.onkeydown = function(e) {
       if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();s.runCode();}
       if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();s.forceSave();}
+      if(e.key==='Escape'){
+        var fpo = document.getElementById('fullPreviewOverlay');
+        if(fpo && fpo.classList.contains('show')){ s.closeFullPreview(); return; }
+      }
     };
   },
 
@@ -920,33 +959,37 @@ var APP = {
     var s = this;
     if (!this.currentRepo) return;
     var list = document.getElementById('membersList');
-    list.innerHTML = '';
-    var colors = CURSOR_COLORS;
-    var i = 0;
-    var emails = this.currentRepo.memberEmails || {};
-    var members = this.currentRepo.members || [];
-    if (!members.length) {
-      list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0">Nenhum membro ainda.</div>';
-      document.getElementById('membersModal').classList.add('show');
-      return;
-    }
-    members.forEach(function(uid) {
-      var email = emails[uid] || uid.substring(0,8)+'...';
-      var isOwner = uid === s.currentRepo.ownerId;
-      var isSelf = uid === s.user.uid;
-      // Check online: self is always online; others from onlineUsers
-      var isOnline = isSelf ? true : (s.onlineUsers[uid] && s.onlineUsers[uid].online);
-      var row = document.createElement('div');
-      row.className = 'member-row';
-      row.innerHTML =
-        '<div class="member-avatar" style="background:' + colors[i%colors.length] + '">' + email[0].toUpperCase() + '</div>' +
-        '<div class="member-email">' + email + (isSelf ? ' <span style="color:var(--text3);font-size:11px">(você)</span>' : '') + '</div>' +
-        '<div class="member-role">' + (isOwner?'👑 Dono':'Colaborador') + '</div>' +
-        '<div class="member-online' + (isOnline?'':' offline') + '" title="' + (isOnline?'Online':'Offline') + '"></div>';
-      list.appendChild(row);
-      i++;
-    });
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0">Carregando...</div>';
     document.getElementById('membersModal').classList.add('show');
+    // Fetch fresh from Firestore to avoid stale data
+    db.collection('repos').doc(this.currentRepo.id).get().then(function(doc) {
+      if (!doc.exists) return;
+      var data = doc.data();
+      var colors = CURSOR_COLORS;
+      var members = data.members || [];
+      var emails = data.memberEmails || {};
+      list.innerHTML = '';
+      if (!members.length) {
+        list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0">Nenhum membro ainda.</div>';
+        return;
+      }
+      members.forEach(function(uid, i) {
+        var email = emails[uid] || uid.substring(0,8)+'...';
+        var isOwner = uid === data.ownerId;
+        var isSelf = uid === s.user.uid;
+        var isOnline = isSelf ? true : (s.onlineUsers[uid] && s.onlineUsers[uid].online);
+        var row = document.createElement('div');
+        row.className = 'member-row';
+        row.innerHTML =
+          '<div class="member-avatar" style="background:' + colors[i % colors.length] + '">' + email[0].toUpperCase() + '</div>' +
+          '<div class="member-email">' + email + (isSelf ? ' <span style="color:var(--text3);font-size:11px">(você)</span>' : '') + '</div>' +
+          '<div class="member-role">' + (isOwner ? '👑 Dono' : 'Colaborador') + '</div>' +
+          '<div class="member-online' + (isOnline ? '' : ' offline') + '" title="' + (isOnline ? 'Online' : 'Offline') + '"></div>';
+        list.appendChild(row);
+      });
+    }).catch(function(e) {
+      list.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px 0">Erro ao carregar membros.</div>';
+    });
   },
 
   downloadFile: function(name, content) {
@@ -1025,6 +1068,51 @@ var APP = {
       dr = false; sp.classList.remove('dragging');
       document.body.style.userSelect = '';
     };
+  },
+
+  toggleSidebar: function() {
+    var sb = document.getElementById('sidebar');
+    var btn = document.getElementById('sidebarToggleBtn');
+    sb.classList.toggle('collapsed');
+    var collapsed = sb.classList.contains('collapsed');
+    if (btn) btn.textContent = collapsed ? '▶' : '◀';
+    if (btn) btn.title = collapsed ? 'Expandir arquivos' : 'Minimizar arquivos';
+  },
+
+  openFullPreview: function() {
+    var s = this;
+    var code = document.getElementById('codeEditor').value;
+    var file = this.currentFile;
+    if (!file) return this.toast('Nenhum arquivo aberto.', 'err');
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (ext !== 'html') return this.toast('Preview disponível apenas para arquivos .html', 'err');
+    var overlay = document.getElementById('fullPreviewOverlay');
+    var iframe = document.getElementById('fullPreviewIframe');
+    var title = document.getElementById('fpoTitle');
+    title.textContent = file.name + ' — Preview ao vivo';
+    overlay.classList.add('show');
+    // Load initial content
+    var blob = new Blob([code], {type:'text/html'});
+    iframe.src = URL.createObjectURL(blob);
+    // Auto-refresh: watch editor for changes
+    this._fullPreviewInterval = setInterval(function() {
+      if (!overlay.classList.contains('show')) return;
+      var newCode = document.getElementById('codeEditor').value;
+      if (newCode !== s._fullPreviewLastCode) {
+        s._fullPreviewLastCode = newCode;
+        var b = new Blob([newCode], {type:'text/html'});
+        iframe.src = URL.createObjectURL(b);
+      }
+    }, 1000);
+    this._fullPreviewLastCode = code;
+  },
+
+  closeFullPreview: function() {
+    document.getElementById('fullPreviewOverlay').classList.remove('show');
+    if (this._fullPreviewInterval) {
+      clearInterval(this._fullPreviewInterval);
+      this._fullPreviewInterval = null;
+    }
   },
 
   cleanup: function() {
