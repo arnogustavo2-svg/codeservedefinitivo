@@ -684,6 +684,9 @@ var APP = {
     var unsub = db.collection('repos').doc(s.currentRepo.id)
       .collection('files').orderBy('name').onSnapshot(function(snap) {
         s.renderFileTree(snap);
+      }, function(err) {
+        s.toast('Erro ao ouvir arquivos: ' + err.message, 'err');
+        console.error('listenFiles error:', err);
       });
     this.unsubs.push(unsub);
   },
@@ -779,13 +782,15 @@ var APP = {
     var ext = data.name.split('.').pop().toLowerCase();
     document.getElementById('langBadge').textContent = LANG_MAP[ext] || ext;
     this.fileUnsub = db.collection('repos').doc(this.currentRepo.id)
-      .collection('files').doc(fileId).onSnapshot(function(doc) {
+      .collection('files').doc(fileId).onSnapshot({includeMetadataChanges: false}, function(doc) {
         if (!doc.exists) return;
+        // Ignore snapshots triggered by our own local write
+        if (doc.metadata.hasPendingWrites) return;
         var d = doc.data();
-        if (!s.syncTimer && d.content !== document.getElementById('codeEditor').value) {
-          var ed = document.getElementById('codeEditor');
+        var ed = document.getElementById('codeEditor');
+        if (d.content !== undefined && d.content !== ed.value) {
           var sel = [ed.selectionStart, ed.selectionEnd];
-          ed.value = d.content || '';
+          ed.value = d.content;
           try { ed.setSelectionRange(sel[0], sel[1]); } catch(e){}
         }
       });
@@ -841,8 +846,8 @@ var APP = {
           db.collection('repos').doc(s.currentRepo.id).update({
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-        }).catch(function() { s.setSyncState('err'); });
-    }, 150);
+        }).catch(function(e) { s.setSyncState('err'); console.error('Save error:', e); });
+    }, 500);
   },
   forceSave: function() {
     clearTimeout(this.syncTimer);
@@ -1041,6 +1046,7 @@ var APP = {
     document.getElementById('tabPreview').classList.toggle('active', tab==='preview');
     document.getElementById('consoleOut').style.display = tab==='console'?'block':'none';
     document.getElementById('previewOut').style.display = tab==='preview'?'block':'none';
+    if (tab !== 'preview') document.getElementById('previewOut').style.display = 'none';
   },
 
   copyRepoId: function() {
