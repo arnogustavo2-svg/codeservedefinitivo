@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-    <title>CodeCollab Pro – SaaS</title>
+    <title>CodeCollab Pro</title>
     <meta name="theme-color" content="#0d1117">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,6 @@
     <script src="https://cdn.jsdelivr.net/npm/y-monaco@0.1.4/dist/y-monaco.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@y/supabase@0.1.0/dist/y-supabase.min.js"></script>
     <style>
-        /* Mesmo CSS do original (mantido para consistência) */
         :root {
             --bg: #0d1117; --sf: #161b22; --s2: #1c2128; --bd: #30363d; --b2: #21262d;
             --tx: #e6edf3; --t2: #8b949e; --t3: #484f58; --ac: #388bfd; --a2: #1f6feb;
@@ -411,11 +410,10 @@
 
 <script>
 // =============================================
-// CONFIGURAÇÃO – substituir pelas tuas credenciais
+// CONFIGURAÇÃO – DADOS REAIS DO TEU SUPABASE
 // =============================================
-const SUPABASE_URL = 'https://teu-projeto.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-const STRIPE_CHECKOUT_FUNCTION_URL = 'https://teu-projeto.supabase.co/functions/v1/create-checkout';
+const SUPABASE_URL = 'https://plseqrcvgyapcgbpdbid.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_wHzMdDm4LR2S3Kz0thcCOw_MTBJKuEU';
 
 // Inicialização do Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -478,7 +476,6 @@ const APP = {
 
     async init() {
         document.getElementById('loadingOverlay').style.display = 'none';
-        // Verifica sessão atual
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
             this.user = user;
@@ -487,7 +484,6 @@ const APP = {
             this.showLanding();
         }
         this.bindUI();
-        // Listener de alterações de auth
         supabase.auth.onAuthStateChange((event, session) => {
             if (session?.user) {
                 this.user = session.user;
@@ -595,11 +591,8 @@ const APP = {
         } else {
             avatar.textContent = (this.user.email[0] || '?').toUpperCase();
         }
-        // Verifica plano pro
-        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', this.user.id).single();
-        if (!profile?.is_pro) {
-            document.getElementById('upgradeBtn').style.display = 'flex';
-        }
+        // Esconde upgrade (Stripe não configurado)
+        document.getElementById('upgradeBtn').style.display = 'none';
         const params = new URLSearchParams(location.search);
         if (params.get('repo')) this.openRepo(params.get('repo'));
         else this.showDashboard();
@@ -612,7 +605,6 @@ const APP = {
         if (!email || !password) return this.showError('Preencha os campos.');
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return this.showError(this.translateError(error));
-        // pós-login tratado pelo listener
     },
     async doRegister() {
         if (!document.getElementById('lgpdCheck').checked) return this.showError('Aceite os Termos.');
@@ -653,7 +645,7 @@ const APP = {
         document.getElementById('tasksBtn').style.display = 'none';
         document.getElementById('chatBtn').style.display = 'none';
         document.getElementById('shareRepoBtn').style.display = 'none';
-        document.getElementById('upgradeBtn').style.display = this.user && !this.user.is_pro ? 'flex' : 'none';
+        document.getElementById('upgradeBtn').style.display = 'none';
         history.pushState({}, '', location.pathname);
         this.loadRepos();
     },
@@ -690,7 +682,6 @@ const APP = {
             card.onclick = () => this.openRepo(repo.id);
             grid.appendChild(card);
         });
-        // Realtime subscription for repos list
         this.reposUnsub = supabase.channel('repos-list')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'repos', filter: `members=cs.{${this.user.id}}` }, () => this.loadRepos())
             .subscribe();
@@ -705,16 +696,7 @@ const APP = {
         if (!name) return;
         const template = document.getElementById('templateSelect').value;
         document.getElementById('newRepoModal').classList.remove('show');
-        // Verifica limite de repositórios (Free)
-        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', this.user.id).single();
-        if (!profile?.is_pro) {
-            const { count } = await supabase.from('repos').select('id', { count: 'exact', head: true }).contains('members', [this.user.id]);
-            if (count >= 3) {
-                this.toast('Limite gratuito (3). Faça upgrade para criar mais.');
-                document.getElementById('upgradeBtn').style.display = 'flex';
-                return;
-            }
-        }
+        // Sem verificação de limite (sem Stripe)
         const repoData = {
             name,
             owner_id: this.user.id,
@@ -771,7 +753,6 @@ const APP = {
         this.openTabs = [];
         this.currentFile = null;
         history.pushState({}, '', '?repo=' + repoId);
-        // Realtime subscription para o repo
         this.repoListener = supabase.channel('repo:'+repoId)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'repos', filter: `id=eq.${repoId}` }, (payload) => {
                 if (payload.new) this.currentRepo = payload.new;
@@ -847,7 +828,6 @@ const APP = {
             monaco.editor.setModelLanguage(this.editor.getModel(), language);
         }
         document.getElementById('langBadge').textContent = language;
-        // Yjs: desconectar anterior e criar novo doc
         if (this.yprovider) {
             this.yprovider.disconnect();
             this.ydoc.destroy();
@@ -870,7 +850,6 @@ const APP = {
         });
     },
     onEditorInput() {
-        // Yjs handle automatically, but we also update the file content periodically
         if (!this.currentRepo || !this.currentFile || this.isReadonly) return;
         this.setSyncState('syncing');
         clearTimeout(this.syncTimer);
@@ -887,13 +866,11 @@ const APP = {
         dot.className = 'syd' + (state === 'syncing' ? ' syncing' : '');
     },
     async listenPresence() {
-        // utilizamos a tabela presence
         if (this._rtdbPresenceRef) { this._rtdbPresenceRef.unsubscribe(); }
         const channel = supabase.channel('presence:'+this.currentRepo.id)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'presence', filter: `repo_id=eq.${this.currentRepo.id}` }, () => this.fetchPresence())
             .subscribe();
         this._rtdbPresenceRef = channel;
-        // registar presença
         await supabase.from('presence').upsert({ user_id: this.user.id, repo_id: this.currentRepo.id, email: this.user.email, online: true, last_seen: new Date() });
         window.addEventListener('beforeunload', () => supabase.from('presence').update({ online: false }).eq('user_id', this.user.id));
         this.fetchPresence();
@@ -1382,8 +1359,7 @@ const APP = {
         return map[error.message] || error.message;
     },
     startUpgrade() {
-        // Redireciona para a Edge Function do Stripe
-        window.location.href = STRIPE_CHECKOUT_FUNCTION_URL + '?userId=' + this.user.id + '&email=' + encodeURIComponent(this.user.email);
+        this.toast('Funcionalidade de upgrade não configurada (Stripe pendente).');
     },
     initMonacoEditor() {
         const self = this;
@@ -1408,7 +1384,6 @@ const APP = {
             ta.addEventListener('input', () => self.onEditorInput());
             return;
         }
-        // Monaco desktop
         const loaderScript = document.createElement('script');
         loaderScript.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js';
         loaderScript.onload = () => {
@@ -1440,18 +1415,12 @@ const APP = {
     }
 };
 
-// Iniciar a aplicação quando a página carregar
+// Inicialização
 window.addEventListener('DOMContentLoaded', () => {
     APP.initMonacoEditor();
-    // O init() será chamado no final da inicialização do Monaco (desktop) ou diretamente no mobile
     if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        // Mobile já inicializou o editor fake, chama init agora
         APP.init();
     } else {
-        // O Monaco carregará e no final do require chamamos APP.init() manualmente
-        // Para isso adicionamos um callback no final do require
-        const origRequire = window.require;
-        // Ajuste: vamos chamar init no onload do loader
         const checkMonaco = setInterval(() => {
             if (APP.editor && typeof APP.editor.getValue === 'function') {
                 clearInterval(checkMonaco);
