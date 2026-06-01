@@ -3,11 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-    <title>CodeCollab Pro</title>
+    <title>CodeCollab Pro – SaaS</title>
     <meta name="theme-color" content="#0d1117">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CDNs: Supabase, Yjs, Y-Monaco, Y-Supabase Provider -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/yjs@13.6.8/dist/yjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/y-monaco@0.1.4/dist/y-monaco.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@y/supabase@0.1.0/dist/y-supabase.min.js"></script>
     <style>
+        /* Mesmo CSS do original (mantido para consistência) */
         :root {
             --bg: #0d1117; --sf: #161b22; --s2: #1c2128; --bd: #30363d; --b2: #21262d;
             --tx: #e6edf3; --t2: #8b949e; --t3: #484f58; --ac: #388bfd; --a2: #1f6feb;
@@ -15,12 +21,12 @@
             --fu: 'Geist', sans-serif; --fm: 'JetBrains Mono', monospace;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { font-family: var(--fu); background: var(--bg); color: var(--tx); -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+        html, body { font-family: var(--fu); background: var(--bg); color: var(--tx); -webkit-font-smoothing: antialiased; scroll-behavior: smooth; height:100%; overflow:hidden; }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--bd); border-radius: 3px; }
 
-        /* LANDING PAGE */
+        /* Landing, Auth, App (copiado integralmente do original) */
         #landingPage { overflow-y: auto; height: 100vh; display: none; }
         .lc { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
         .ln { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid var(--b2); }
@@ -232,6 +238,7 @@
         .clb { font-size: 12px; color: var(--t2); }
         .rbtn { padding: 5px 12px; background: var(--gn); border: none; border-radius: var(--r); color: #000; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .nbtn.back { border-color: rgba(56,139,253,.4); color: var(--ac); }
+        .nbtn.upgrade { background: var(--ac); color: #fff; border-color: var(--ac); font-weight: 700; }
 
         /* CURSOR DECORATIONS */
         .remote-cursor-0 { border-left: 2px solid #388bfd; }
@@ -242,30 +249,11 @@
         .remote-cursor-5 { border-left: 2px solid #39d353; }
 
         @media(max-width:768px) { .ht { font-size: 28px; } .ha { flex-direction: column; align-items: center; } .sb { position: absolute; z-index: 40; height: 100%; } .sb.collapsed { width: 0; } .hp, .tp, .chat-panel { width: 100%; } }
-
-        /* Editor fallback mobile */
-        #mobileEditor {
-            display: none;
-            width: 100%;
-            height: 100%;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            padding: 12px;
-            border: none;
-            outline: none;
-            resize: none;
-            tab-size: 2;
-            white-space: pre;
-            overflow: auto;
-            box-sizing: border-box;
-        }
+        #mobileEditor { display: none; width: 100%; height: 100%; background: #1e1e1e; color: #d4d4d4; font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.5; padding: 12px; border: none; outline: none; resize: none; tab-size: 2; white-space: pre; overflow: auto; box-sizing: border-box; }
     </style>
 </head>
 <body>
-<div id="loadingOverlay"><div class="spinner"></div><span>Carregando...</span></div>
+<div id="loadingOverlay"><div class="spinner"></div><span>Carregando CodeCollab Pro...</span></div>
 
 <!-- LANDING PAGE -->
 <div id="landingPage">
@@ -293,9 +281,6 @@
             <div class="cr" id="lgpdRow"><div class="cb" id="lgpdBox"></div><span class="ct2">Aceito os <a class="lk" id="termsLink">Termos de Uso</a></span></div>
             <input type="checkbox" id="lgpdCheck" style="display:none">
             <div class="err" id="errMsg"></div>
-            <!-- CONFIGURAÇÃO NECESSÁRIA: ative o provedor GitHub no Firebase Console
-                 em Authentication > Sign-in method > GitHub, e adicione o Client ID
-                 e Client Secret da sua OAuth App do GitHub -->
             <button class="btn btn-github" id="githubLoginBtn">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
                 Entrar com GitHub
@@ -321,6 +306,7 @@
             <button class="nbtn" id="chatBtn" style="display:none" title="Chat">💬</button>
             <button class="nbtn" id="membersBtn" style="display:none">Membros</button>
             <button class="nbtn" id="newRepoBtn">Novo</button>
+            <button class="nbtn upgrade" id="upgradeBtn" style="display:none" onclick="APP.startUpgrade()">⭐ Upgrade</button>
             <div class="av" id="userAvatar">?</div>
             <button class="nbtn danger" id="logoutBtn">Sair</button>
         </div>
@@ -357,8 +343,7 @@
                 </div>
                 <div class="ew">
                     <div id="monacoContainer" style="width:100%;height:100%;min-height:200px">
-                        <textarea id="mobileEditor" spellcheck="false" autocorrect="off"
-                            autocapitalize="off" autocomplete="off"></textarea>
+                        <textarea id="mobileEditor" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></textarea>
                     </div>
                     <div class="ro" id="readonlyOverlay"><div class="rb">🔒 Modo Leitura</div><button class="btn btn-sm" id="restoreSnapshotBtn" style="background:var(--gn);color:#000;width:auto">Restaurar</button><button class="btn btn-sm" id="exitReadonlyBtn" style="background:var(--bd);color:var(--tx);width:auto">Sair</button></div>
                 </div>
@@ -425,1212 +410,1056 @@
 </div>
 
 <script>
-(function() {
-    var FIREBASE_SCRIPTS = [
-        'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
-        'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js',
-        'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js',
-        'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'
-    ];
-    var loaded = 0;
-    var domReady = false;
-    var firebaseReady = false;
+// =============================================
+// CONFIGURAÇÃO – substituir pelas tuas credenciais
+// =============================================
+const SUPABASE_URL = 'https://teu-projeto.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+const STRIPE_CHECKOUT_FUNCTION_URL = 'https://teu-projeto.supabase.co/functions/v1/create-checkout';
 
-    function tryStart() {
-        if (domReady && firebaseReady) _initApp();
-    }
+// Inicialização do Supabase
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    function onScriptLoad() {
-        loaded++;
-        if (loaded === FIREBASE_SCRIPTS.length) {
-            firebaseReady = true;
-            tryStart();
+// Variáveis globais e utilitários
+const CURSOR_COLORS = ['#388bfd','#3fb950','#f78166','#a371f7','#d29922','#39d353'];
+const LANGUAGE_MAP = {js:'javascript',ts:'typescript',html:'html',css:'css',py:'python',json:'json',md:'markdown',txt:'text'};
+const DEFAULT_CODE = {
+    html: '<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <style>\n    body{font-family:sans-serif;padding:20px;background:#f5f5f5}h1{color:#333}\n  </style>\n</head>\n<body>\n  <h1>🚀 Olá!</h1>\n  <p>Editando em tempo real.</p>\n</body>\n</html>',
+    js: '// JavaScript\nconsole.log("Hello!");\n',
+    py: '# Python\nprint("Hello!")\n',
+    css: '/* CSS */\nbody{font-family:sans-serif;padding:20px}\n'
+};
+const TEMPLATES = {
+    'html-css-js': [
+        {name:'index.html', content: DEFAULT_CODE.html},
+        {name:'style.css', content: DEFAULT_CODE.css},
+        {name:'script.js', content: DEFAULT_CODE.js}
+    ],
+    'node': [
+        {name:'index.js', content:'const express = require("express");\nconst app = express();\nconst PORT = process.env.PORT || 3000;\napp.get("/", (req,res) => res.send("Hello World"));\napp.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));\n'},
+        {name:'package.json', content:'{\n  "name": "meu-projeto",\n  "version": "1.0.0",\n  "main": "index.js",\n  "dependencies": {\n    "express": "^4.18.2"\n  }\n}\n'},
+        {name:'README.md', content:'# Meu Projeto\nAPI Node.js\n'}
+    ],
+    'python': [
+        {name:'main.py', content:'# Python Script\nprint("Hello World")\n'},
+        {name:'requirements.txt', content:'# dependências\n'}
+    ],
+    'react': [
+        {name:'index.html', content:'<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"><\/script>\n  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>\n  <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <div id="root"></div>\n  <script type="text/babel" src="App.js"><\/script>\n</body>\n</html>\n'},
+        {name:'App.js', content:'function App() {\n  return <h1>Hello React!</h1>;\n}\nReactDOM.render(<App />, document.getElementById("root"));\n'},
+        {name:'style.css', content:'body{font-family:sans-serif;padding:20px;}\n'}
+    ]
+};
+
+// =============================================
+// APLICAÇÃO PRINCIPAL
+// =============================================
+const APP = {
+    user: null,
+    currentRepo: null,
+    currentFile: null,
+    openTabs: [],
+    unsubscribers: [],
+    syncTimer: null,
+    cursorTimer: null,
+    presenceUnsub: null,
+    reposUnsub: null,
+    onlineUsers: {},
+    isReadonly: false,
+    editor: null,
+    diffEditor: null,
+    _splitterMove: null,
+    _splitterUp: null,
+    _rtdbPresenceRef: null,
+    _cursorDecorations: [],
+    ydoc: null,
+    yprovider: null,
+    ybinding: null,
+
+    async init() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        // Verifica sessão atual
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            this.user = user;
+            this.onLogin();
+        } else {
+            this.showLanding();
         }
-    }
-    function onScriptError() {
-        document.getElementById('loadingOverlay').innerHTML =
-            '<div style="color:#f85149;font-size:14px;padding:24px;text-align:center">Falha ao carregar Firebase.<br>Verifique sua conexão e recarregue.</div>';
-    }
-    FIREBASE_SCRIPTS.forEach(function(src) {
-        var s = document.createElement('script');
-        s.src = src;
-        s.onload = onScriptLoad;
-        s.onerror = onScriptError;
-        document.head.appendChild(s);
-    });
-
-    window.addEventListener('DOMContentLoaded', function() {
-        domReady = true;
-        tryStart();
-    });
-})();
-</script>
-<script>
-function _initApp() {
-    // Inicialização do Firebase
-    firebase.initializeApp({
-        apiKey: "AIzaSyBXTrBywgR85BYs_7XRjf-N6leLTRTegis",
-        authDomain: "codeverse-14794.firebaseapp.com",
-        projectId: "codeverse-14794",
-        storageBucket: "codeverse-14794.firebasestorage.app",
-        messagingSenderId: "307083349125",
-        appId: "1:307083349125:web:11b96a4c3fd856d6236dec",
-        databaseURL: "https://codeverse-14794-default-rtdb.firebaseio.com"
-    });
-    var auth = window.auth = firebase.auth();
-    var db = window.db = firebase.firestore();
-    var rtdb = window.rtdb = firebase.database();
-    
-    var CURSOR_COLORS = ['#388bfd','#3fb950','#f78166','#a371f7','#d29922','#39d353'];
-    var LANGUAGE_MAP = {js:'javascript',ts:'typescript',html:'html',css:'css',py:'python',json:'json',md:'markdown',txt:'text'};
-    var DEFAULT_CODE = {
-        html: '<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <style>\n    body{font-family:sans-serif;padding:20px;background:#f5f5f5}h1{color:#333}\n  </style>\n</head>\n<body>\n  <h1>🚀 Olá!</h1>\n  <p>Editando em tempo real.</p>\n</body>\n</html>',
-        js: '// JavaScript\nconsole.log("Hello!");\n',
-        py: '# Python\nprint("Hello!")\n',
-        css: '/* CSS */\nbody{font-family:sans-serif;padding:20px}\n'
-    };
-    var TEMPLATES = {
-        'html-css-js': [
-            {name:'index.html', content: DEFAULT_CODE.html},
-            {name:'style.css', content: DEFAULT_CODE.css},
-            {name:'script.js', content: DEFAULT_CODE.js}
-        ],
-        'node': [
-            {name:'index.js', content:'const express = require("express");\nconst app = express();\nconst PORT = process.env.PORT || 3000;\napp.get("/", (req,res) => res.send("Hello World"));\napp.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));\n'},
-            {name:'package.json', content:'{\n  "name": "meu-projeto",\n  "version": "1.0.0",\n  "main": "index.js",\n  "dependencies": {\n    "express": "^4.18.2"\n  }\n}\n'},
-            {name:'README.md', content:'# Meu Projeto\nAPI Node.js\n'}
-        ],
-        'python': [
-            {name:'main.py', content:'# Python Script\nprint("Hello World")\n'},
-            {name:'requirements.txt', content:'# dependências\n'}
-        ],
-        'react': [
-            {name:'index.html', content:'<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"><\/script>\n  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>\n  <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <div id="root"></div>\n  <script type="text/babel" src="App.js"><\/script>\n</body>\n</html>\n'},
-            {name:'App.js', content:'function App() {\n  return <h1>Hello React!</h1>;\n}\nReactDOM.render(<App />, document.getElementById("root"));\n'},
-            {name:'style.css', content:'body{font-family:sans-serif;padding:20px;}\n'}
-        ]
-    };
-    
-    var APP = window.APP = {
-        user: null,
-        currentRepo: null,
-        currentFile: null,
-        openTabs: [],
-        unsubscribers: [],
-        syncTimer: null,
-        cursorTimer: null,
-        presenceUnsub: null,
-        reposUnsub: null,
-        onlineUsers: {},
-        isReadonly: false,
-        editor: null,
-        diffEditor: null,
-        _splitterMove: null,
-        _splitterUp: null,
-        _rtdbPresenceRef: null,
-        _cursorDecorations: [],
-        
-        init: function() {
-            var self = this;
-            this.bindAuth();
-            this.bindUI();
-            auth.onAuthStateChanged(function(user) {
-                document.getElementById('loadingOverlay').style.display = 'none';
-                if (user) {
-                    self.user = user;
-                    self.onLogin();
-                } else {
-                    self.showLanding();
-                }
-            });
-        },
-        
-        showLanding: function() {
-            document.getElementById('landingPage').style.display = 'block';
-            document.getElementById('authPage').style.display = 'none';
-            document.getElementById('appPage').style.display = 'none';
-        },
-        showAuthPage: function() {
-            document.getElementById('landingPage').style.display = 'none';
-            document.getElementById('authPage').style.display = 'flex';
-            document.getElementById('appPage').style.display = 'none';
-            document.getElementById('joinBox').classList.remove('on');
-            document.getElementById('joinCheck').checked = false;
-            document.getElementById('roomInputWrap').style.display = 'none';
-        },
-        showAuthWithJoin: function() {
-            this.showAuthPage();
-            document.getElementById('joinBox').classList.add('on');
-            document.getElementById('joinCheck').checked = true;
-            document.getElementById('roomInputWrap').style.display = 'block';
-            setTimeout(function() { document.getElementById('roomIdInput').focus(); }, 200);
-        },
-        
-        bindAuth: function() {
-            var self = this;
-            function toggleCheckbox(boxId, checkId, callback) {
-                var box = document.getElementById(boxId);
-                var check = document.getElementById(checkId);
-                document.getElementById(boxId).parentElement.onclick = function(e) {
-                    if (e.target.classList.contains('lk')) return;
-                    check.checked = !check.checked;
-                    box.classList.toggle('on', check.checked);
-                    if (callback) callback(check.checked);
-                };
-            }
-            toggleCheckbox('joinBox','joinCheck', function(checked) {
-                document.getElementById('roomInputWrap').style.display = checked ? 'block' : 'none';
-            });
-            toggleCheckbox('lgpdBox','lgpdCheck');
-            document.getElementById('loginBtn').onclick = function() { self.doLogin(); };
-            document.getElementById('registerBtn').onclick = function() { self.doRegister(); };
-            document.getElementById('githubLoginBtn').onclick = function() { self.loginWithGitHub(); };
-        },
-        
-        bindUI: function() {
-            var self = this;
-            document.getElementById('logoutBtn').onclick = function() { self.logout(); };
-            document.getElementById('navLogoBtn').onclick = function() { self.showDashboard(); };
-            document.getElementById('newRepoBtn').onclick = function() { self.openNewRepoModal(); };
-            document.getElementById('newRepoBtnDash').onclick = function() { self.openNewRepoModal(); };
-            document.getElementById('cancelRepoBtn').onclick = function() { document.getElementById('newRepoModal').classList.remove('show'); };
-            document.getElementById('createRepoBtn').onclick = function() { self.createRepo(); };
-            document.getElementById('membersBtn').onclick = function() { self.showMembers(); };
-            document.getElementById('closeMembersBtn').onclick = function() { document.getElementById('membersModal').classList.remove('show'); };
-            document.getElementById('runBtn').onclick = function() { self.runCode(); };
-            document.getElementById('downloadBtn').onclick = function() { self.downloadCurrentFile(); };
-            document.getElementById('newFileBtn').onclick = function() { self.showNewFileInput(); };
-            document.getElementById('collabId').onclick = function() { self.copyRepoId(); };
-            document.getElementById('tabConsole').onclick = function() { self.switchOutput('console'); };
-            document.getElementById('tabPreview').onclick = function() { self.switchOutput('preview'); };
-            document.getElementById('backToReposBtn').onclick = function() { self.showDashboard(); };
-            document.getElementById('historyBtn').onclick = function() { self.openHistory(); };
-            document.getElementById('tasksBtn').onclick = function() { self.openTasks(); };
-            document.getElementById('chatBtn').onclick = function() { self.openChat(); };
-            document.getElementById('snapshotBtn').onclick = function() { self.saveSnapshot(); };
-            document.getElementById('saveSnapshotBtn').onclick = function() { self.saveSnapshot(); };
-            document.getElementById('restoreSnapshotBtn').onclick = function() { self.restoreSnapshot(); };
-            document.getElementById('exitReadonlyBtn').onclick = function() { self.exitReadonly(); };
-            document.getElementById('addTaskBtn').onclick = function() { self.addTask(); };
-            document.getElementById('taskInput').onkeydown = function(e) { if (e.key === 'Enter') self.addTask(); };
-            document.getElementById('sendChatBtn').onclick = function() { self.sendChatMessage(); };
-            document.getElementById('chatInput').onkeydown = function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); self.sendChatMessage(); }
-            };
-            document.getElementById('shareRepoBtn').onclick = function() { self.openShareModal(); };
-            
-            document.querySelectorAll('.mo').forEach(function(m) {
-                m.onclick = function(e) { if (e.target === m) m.classList.remove('show'); };
-            });
-            document.getElementById('newFileInput').onkeydown = function(e) {
-                if (e.key === 'Enter') self.createFile(this.value.trim());
-                if (e.key === 'Escape') self.hideNewFileInput();
-            };
-            this.setupSplitter();
-            document.onkeydown = function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); self.runCode(); }
-            };
-        },
-        
-        onLogin: function() {
-            document.getElementById('landingPage').style.display = 'none';
-            document.getElementById('authPage').style.display = 'none';
-            document.getElementById('appPage').style.display = 'flex';
-            var avatar = document.getElementById('userAvatar');
-            if (this.user.photoURL) {
-                avatar.innerHTML = '<img src="' + this.user.photoURL + '" alt="avatar">';
+        this.bindUI();
+        // Listener de alterações de auth
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session?.user) {
+                this.user = session.user;
+                this.onLogin();
             } else {
-                avatar.textContent = this.user.email[0].toUpperCase();
+                this.user = null;
+                this.showLanding();
             }
-            var params = new URLSearchParams(location.search);
-            if (params.get('repo')) this.openRepo(params.get('repo'));
-            else this.showDashboard();
-        },
-        doLogin: function() {
-            var self = this;
-            if (!document.getElementById('lgpdCheck').checked) return this.showError('Aceite os Termos.');
-            var email = document.getElementById('email').value.trim();
-            var password = document.getElementById('password').value;
-            if (!email || !password) return this.showError('Preencha os campos.');
-            var joinCheck = document.getElementById('joinCheck').checked;
-            var roomId = (document.getElementById('roomIdInput').value || '').trim();
-            auth.signInWithEmailAndPassword(email, password)
-                .then(function(userCred) {
-                    self.user = userCred.user;
-                    if (joinCheck && roomId) return self.joinRepo(roomId);
-                })
-                .catch(function(err) { self.showError(self.translateError(err)); });
-        },
-        doRegister: function() {
-            var self = this;
-            if (!document.getElementById('lgpdCheck').checked) return this.showError('Aceite os Termos.');
-            var email = document.getElementById('email').value.trim();
-            var password = document.getElementById('password').value;
-            if (!email || !password) return this.showError('Preencha os campos.');
-            if (password.length < 6) return this.showError('Senha: mínimo 6.');
-            var joinCheck = document.getElementById('joinCheck').checked;
-            var roomId = (document.getElementById('roomIdInput').value || '').trim();
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(function(userCred) {
-                    self.user = userCred.user;
-                    if (joinCheck && roomId) return self.joinRepo(roomId);
-                })
-                .catch(function(err) { self.showError(self.translateError(err)); });
-        },
-        loginWithGitHub: function() {
-            var self = this;
-            var provider = new firebase.auth.GithubAuthProvider();
-            auth.signInWithPopup(provider)
-                .then(function(result) {
-                    self.user = result.user;
-                    db.collection('users').doc(self.user.uid).set({
-                        displayName: self.user.displayName,
-                        photoURL: self.user.photoURL,
-                        email: self.user.email
-                    }, { merge: true }).catch(function(){});
-                    var joinCheck = document.getElementById('joinCheck').checked;
-                    var roomId = (document.getElementById('roomIdInput').value || '').trim();
-                    if (joinCheck && roomId) return self.joinRepo(roomId);
-                })
-                .catch(function(err) { APP.showError(err.message); });
-        },
-        logout: function() {
-            this.cleanup();
-            if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
-            auth.signOut().then(function() {
-                APP.user = null;
-                APP.showLanding();
-            });
-        },
-        
-        showDashboard: function() {
-            this.cleanup();
-            this.currentRepo = null;
-            this.currentFile = null;
-            this.openTabs = [];
-            document.getElementById('dashPage').style.display = 'block';
-            document.getElementById('editorPage').style.display = 'none';
-            document.getElementById('collabBar').style.display = 'none';
-            document.getElementById('navRepoName').style.display = 'none';
-            document.getElementById('membersBtn').style.display = 'none';
-            document.getElementById('historyBtn').style.display = 'none';
-            document.getElementById('tasksBtn').style.display = 'none';
-            document.getElementById('chatBtn').style.display = 'none';
-            document.getElementById('shareRepoBtn').style.display = 'none';
-            history.pushState({}, '', location.pathname);
-            this.loadRepos();
-        },
-        loadRepos: function() {
-            var self = this;
-            if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
-            this.reposUnsub = db.collection('repos')
-                .where('members', 'array-contains', this.user.uid)
-                .onSnapshot(function(snap) {
-                    var grid = document.getElementById('repoGrid');
-                    if (!grid) return;
-                    if (snap.empty) {
-                        grid.innerHTML = '<div class="es"><h3>Nenhum repositório</h3></div>';
-                        return;
-                    }
-                    var docs = [];
-                    snap.forEach(function(d) { docs.push(d); });
-                    docs.sort(function(a, b) {
-                        var ta = a.data().updatedAt ? a.data().updatedAt.toMillis() : 0;
-                        var tb = b.data().updatedAt ? b.data().updatedAt.toMillis() : 0;
-                        return tb - ta;
-                    });
-                    grid.innerHTML = '';
-                    docs.forEach(function(doc) {
-                        var data = doc.data();
-                        var card = document.createElement('div');
-                        card.className = 'rc';
-                        // Corrigido: createElement + textContent para prevenir XSS
-                        var rnDiv = document.createElement('div');
-                        rnDiv.className = 'rn';
-                        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        svg.setAttribute('width', '14');
-                        svg.setAttribute('height', '14');
-                        svg.setAttribute('viewBox', '0 0 16 16');
-                        svg.setAttribute('fill', 'var(--ac)');
-                        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        path.setAttribute('d', 'M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8z');
-                        svg.appendChild(path);
-                        rnDiv.appendChild(svg);
-                        var repoNameText = document.createTextNode(data.name);
-                        rnDiv.appendChild(repoNameText);
-                        var rdDiv = document.createElement('div');
-                        rdDiv.className = 'rd';
-                        rdDiv.textContent = data.description || '';
-                        card.appendChild(rnDiv);
-                        card.appendChild(rdDiv);
-                        card.onclick = function() { self.openRepo(doc.id); };
-                        grid.appendChild(card);
-                    });
-                });
-        },
-        openNewRepoModal: function() {
-            document.getElementById('repoNameInput').value = '';
-            document.getElementById('templateSelect').value = '';
-            document.getElementById('newRepoModal').classList.add('show');
-        },
-        createRepo: function() {
-            var self = this;
-            var name = document.getElementById('repoNameInput').value.trim().replace(/\s+/g,'-').toLowerCase();
-            if (!name) return;
-            var template = document.getElementById('templateSelect').value;
-            document.getElementById('newRepoModal').classList.remove('show');
-            var memberEmails = {};
-            memberEmails[self.user.uid] = self.user.email;
-            var repoData = {
-                name: name,
-                description: '',
-                ownerId: self.user.uid,
-                ownerEmail: self.user.email,
-                members: [self.user.uid],
-                memberEmails: memberEmails,
-                fileCount: template ? TEMPLATES[template].length : 0,
-                readonlyToken: Math.random().toString(36).substr(2, 12),
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            db.collection('repos').add(repoData)
-                .then(function(docRef) {
-                    var repoId = docRef.id;
-                    if (template && TEMPLATES[template]) {
-                        var batch = db.batch();
-                        TEMPLATES[template].forEach(function(file) {
-                            var fileRef = db.collection('repos').doc(repoId).collection('files').doc();
-                            batch.set(fileRef, {
-                                name: file.name,
-                                content: file.content,
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                        });
-                        return batch.commit().then(function() { return repoId; });
-                    }
-                    return repoId;
-                })
-                .then(function(repoId) {
-                    self.toast('✅ Repositório criado!');
-                    self.openRepo(repoId);
-                })
-                .catch(function(err) {
-                    self.toast('Erro: ' + err.message, 'err');
-                });
-        },
-        joinRepo: function(id) {
-            var self = this;
-            return db.collection('repos').doc(id).get().then(function(doc) {
-                if (!doc.exists) { self.toast('Não encontrado.', 'err'); return; }
-                var data = doc.data();
-                if (data.members.includes(self.user.uid)) { self.openRepo(id); return; }
-                var update = { members: firebase.firestore.FieldValue.arrayUnion(self.user.uid) };
-                update['memberEmails.' + self.user.uid] = self.user.email;
-                return doc.ref.update(update).then(function() { self.openRepo(id); });
-            });
-        },
-        openRepo: function(repoId) {
-            var self = this;
-            if (this.repoListener) { this.repoListener(); this.repoListener = null; }
-            if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
-            db.collection('repos').doc(repoId).get().then(function(doc) {
-                if (!doc.exists) { self.toast('Não encontrado.', 'err'); return; }
-                var data = doc.data();
-                self.currentRepo = { id: doc.id, ...data };
-                var urlParams = new URLSearchParams(location.search);
-                var viewToken = urlParams.get('view');
-                if (viewToken && viewToken === data.readonlyToken && !data.members.includes(self.user.uid)) {
-                    self.isReadonly = true;
-                } else if (!data.members.includes(self.user.uid)) {
-                    self.isReadonly = false;
-                }
-                document.getElementById('dashPage').style.display = 'none';
-                document.getElementById('editorPage').style.display = 'flex';
-                document.getElementById('collabBar').style.display = 'flex';
-                document.getElementById('navRepoName').style.display = 'flex';
-                document.getElementById('membersBtn').style.display = self.isReadonly ? 'none' : 'flex';
-                document.getElementById('historyBtn').style.display = self.isReadonly ? 'none' : 'flex';
-                document.getElementById('tasksBtn').style.display = self.isReadonly ? 'none' : 'flex';
-                document.getElementById('chatBtn').style.display = self.isReadonly ? 'none' : 'flex';
-                document.getElementById('shareRepoBtn').style.display = 'flex';
-                document.getElementById('navRepoTitle').textContent = data.name;
-                document.getElementById('collabId').textContent = repoId;
-                if (self.editor) { self.editor.setValue(''); }
-                self.openTabs = [];
-                self.currentFile = null;
-                history.pushState({}, '', '?repo=' + repoId);
-                self.repoListener = db.collection('repos').doc(repoId).onSnapshot(function(snap) {
-                    if (snap.exists) self.currentRepo = { id: snap.id, ...snap.data() };
-                });
-                self.listenFiles();
-                self.listenPresence();
-                self.listenSnapshots();
-                self.listenTasks();
-                self.listenChat();
-            });
-        },
-        
-        listenFiles: function() {
-            var self = this;
-            var unsub = db.collection('repos').doc(self.currentRepo.id)
-                .collection('files').orderBy('name')
-                .onSnapshot(function(snap) { self.renderFileTree(snap); });
-            this.unsubscribers.push(unsub);
-        },
-        renderFileTree: function(snap) {
-            var self = this;
-            var tree = document.getElementById('fileTree');
-            tree.innerHTML = '';
-            if (snap.empty) {
-                tree.innerHTML = '<div style="color:var(--t3);font-size:11px;padding:14px;text-align:center">Vazio</div>';
+        });
+    },
+
+    showLanding() {
+        document.getElementById('landingPage').style.display = 'block';
+        document.getElementById('authPage').style.display = 'none';
+        document.getElementById('appPage').style.display = 'none';
+        document.getElementById('loadingOverlay').style.display = 'none';
+    },
+    showAuthPage() {
+        document.getElementById('landingPage').style.display = 'none';
+        document.getElementById('authPage').style.display = 'flex';
+        document.getElementById('appPage').style.display = 'none';
+        document.getElementById('joinBox').classList.remove('on');
+        document.getElementById('joinCheck').checked = false;
+        document.getElementById('roomInputWrap').style.display = 'none';
+    },
+    showAuthWithJoin() {
+        this.showAuthPage();
+        document.getElementById('joinBox').classList.add('on');
+        document.getElementById('joinCheck').checked = true;
+        document.getElementById('roomInputWrap').style.display = 'block';
+        setTimeout(() => document.getElementById('roomIdInput').focus(), 200);
+    },
+
+    bindUI() {
+        const self = this;
+        document.getElementById('logoutBtn').onclick = () => this.logout();
+        document.getElementById('navLogoBtn').onclick = () => this.showDashboard();
+        document.getElementById('newRepoBtn').onclick = () => this.openNewRepoModal();
+        document.getElementById('newRepoBtnDash').onclick = () => this.openNewRepoModal();
+        document.getElementById('cancelRepoBtn').onclick = () => document.getElementById('newRepoModal').classList.remove('show');
+        document.getElementById('createRepoBtn').onclick = () => this.createRepo();
+        document.getElementById('membersBtn').onclick = () => this.showMembers();
+        document.getElementById('closeMembersBtn').onclick = () => document.getElementById('membersModal').classList.remove('show');
+        document.getElementById('runBtn').onclick = () => this.runCode();
+        document.getElementById('downloadBtn').onclick = () => this.downloadCurrentFile();
+        document.getElementById('newFileBtn').onclick = () => this.showNewFileInput();
+        document.getElementById('collabId').onclick = () => this.copyRepoId();
+        document.getElementById('tabConsole').onclick = () => this.switchOutput('console');
+        document.getElementById('tabPreview').onclick = () => this.switchOutput('preview');
+        document.getElementById('backToReposBtn').onclick = () => this.showDashboard();
+        document.getElementById('historyBtn').onclick = () => this.openHistory();
+        document.getElementById('tasksBtn').onclick = () => this.openTasks();
+        document.getElementById('chatBtn').onclick = () => this.openChat();
+        document.getElementById('snapshotBtn').onclick = () => this.saveSnapshot();
+        document.getElementById('saveSnapshotBtn').onclick = () => this.saveSnapshot();
+        document.getElementById('restoreSnapshotBtn').onclick = () => this.restoreSnapshot();
+        document.getElementById('exitReadonlyBtn').onclick = () => this.exitReadonly();
+        document.getElementById('addTaskBtn').onclick = () => this.addTask();
+        document.getElementById('taskInput').onkeydown = (e) => { if (e.key === 'Enter') this.addTask(); };
+        document.getElementById('sendChatBtn').onclick = () => this.sendChatMessage();
+        document.getElementById('chatInput').onkeydown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendChatMessage(); }
+        };
+        document.getElementById('shareRepoBtn').onclick = () => this.openShareModal();
+        document.querySelectorAll('.mo').forEach(m => {
+            m.onclick = (e) => { if (e.target === m) m.classList.remove('show'); };
+        });
+        document.getElementById('newFileInput').onkeydown = (e) => {
+            if (e.key === 'Enter') this.createFile(e.target.value.trim());
+            if (e.key === 'Escape') this.hideNewFileInput();
+        };
+        this.setupSplitter();
+        document.onkeydown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); this.runCode(); }
+        };
+        // Login / Register
+        document.getElementById('loginBtn').onclick = () => this.doLogin();
+        document.getElementById('registerBtn').onclick = () => this.doRegister();
+        document.getElementById('githubLoginBtn').onclick = () => this.loginWithGitHub();
+        // Checkboxes
+        this._toggleCheckbox('joinBox','joinCheck', (checked) => {
+            document.getElementById('roomInputWrap').style.display = checked ? 'block' : 'none';
+        });
+        this._toggleCheckbox('lgpdBox','lgpdCheck');
+    },
+
+    _toggleCheckbox(boxId, checkId, callback) {
+        const box = document.getElementById(boxId);
+        const check = document.getElementById(checkId);
+        document.getElementById(boxId).parentElement.onclick = function(e) {
+            if (e.target.classList.contains('lk')) return;
+            check.checked = !check.checked;
+            box.classList.toggle('on', check.checked);
+            if (callback) callback(check.checked);
+        };
+    },
+
+    async onLogin() {
+        document.getElementById('landingPage').style.display = 'none';
+        document.getElementById('authPage').style.display = 'none';
+        document.getElementById('appPage').style.display = 'flex';
+        const avatar = document.getElementById('userAvatar');
+        if (this.user.user_metadata?.avatar_url) {
+            avatar.innerHTML = `<img src="${this.user.user_metadata.avatar_url}" alt="avatar">`;
+        } else {
+            avatar.textContent = (this.user.email[0] || '?').toUpperCase();
+        }
+        // Verifica plano pro
+        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', this.user.id).single();
+        if (!profile?.is_pro) {
+            document.getElementById('upgradeBtn').style.display = 'flex';
+        }
+        const params = new URLSearchParams(location.search);
+        if (params.get('repo')) this.openRepo(params.get('repo'));
+        else this.showDashboard();
+    },
+
+    async doLogin() {
+        if (!document.getElementById('lgpdCheck').checked) return this.showError('Aceite os Termos.');
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) return this.showError('Preencha os campos.');
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) return this.showError(this.translateError(error));
+        // pós-login tratado pelo listener
+    },
+    async doRegister() {
+        if (!document.getElementById('lgpdCheck').checked) return this.showError('Aceite os Termos.');
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) return this.showError('Preencha os campos.');
+        if (password.length < 6) return this.showError('Senha: mínimo 6.');
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) return this.showError(this.translateError(error));
+        this.toast('Conta criada! Verifique o email se necessário.');
+    },
+    async loginWithGitHub() {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'github',
+            options: { redirectTo: window.location.origin }
+        });
+        if (error) this.showError(error.message);
+    },
+    async logout() {
+        this.cleanup();
+        if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
+        await supabase.auth.signOut();
+        this.user = null;
+        this.showLanding();
+    },
+
+    showDashboard() {
+        this.cleanup();
+        this.currentRepo = null;
+        this.currentFile = null;
+        this.openTabs = [];
+        document.getElementById('dashPage').style.display = 'block';
+        document.getElementById('editorPage').style.display = 'none';
+        document.getElementById('collabBar').style.display = 'none';
+        document.getElementById('navRepoName').style.display = 'none';
+        document.getElementById('membersBtn').style.display = 'none';
+        document.getElementById('historyBtn').style.display = 'none';
+        document.getElementById('tasksBtn').style.display = 'none';
+        document.getElementById('chatBtn').style.display = 'none';
+        document.getElementById('shareRepoBtn').style.display = 'none';
+        document.getElementById('upgradeBtn').style.display = this.user && !this.user.is_pro ? 'flex' : 'none';
+        history.pushState({}, '', location.pathname);
+        this.loadRepos();
+    },
+    async loadRepos() {
+        if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
+        const { data: repos, error } = await supabase
+            .from('repos')
+            .select('*')
+            .contains('members', [this.user.id])
+            .order('updated_at', { ascending: false });
+        if (error) {
+            console.error(error);
+            return;
+        }
+        const grid = document.getElementById('repoGrid');
+        grid.innerHTML = repos.length ? '' : '<div class="es"><h3>Nenhum repositório</h3></div>';
+        repos.forEach(repo => {
+            const card = document.createElement('div');
+            card.className = 'rc';
+            const rnDiv = document.createElement('div');
+            rnDiv.className = 'rn';
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width','14'); svg.setAttribute('height','14'); svg.setAttribute('viewBox','0 0 16 16'); svg.setAttribute('fill','var(--ac)');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d','M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8z');
+            svg.appendChild(path);
+            rnDiv.appendChild(svg);
+            rnDiv.appendChild(document.createTextNode(repo.name));
+            const rdDiv = document.createElement('div');
+            rdDiv.className = 'rd';
+            rdDiv.textContent = repo.description || '';
+            card.appendChild(rnDiv);
+            card.appendChild(rdDiv);
+            card.onclick = () => this.openRepo(repo.id);
+            grid.appendChild(card);
+        });
+        // Realtime subscription for repos list
+        this.reposUnsub = supabase.channel('repos-list')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'repos', filter: `members=cs.{${this.user.id}}` }, () => this.loadRepos())
+            .subscribe();
+    },
+    openNewRepoModal() {
+        document.getElementById('repoNameInput').value = '';
+        document.getElementById('templateSelect').value = '';
+        document.getElementById('newRepoModal').classList.add('show');
+    },
+    async createRepo() {
+        const name = document.getElementById('repoNameInput').value.trim().replace(/\s+/g,'-').toLowerCase();
+        if (!name) return;
+        const template = document.getElementById('templateSelect').value;
+        document.getElementById('newRepoModal').classList.remove('show');
+        // Verifica limite de repositórios (Free)
+        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', this.user.id).single();
+        if (!profile?.is_pro) {
+            const { count } = await supabase.from('repos').select('id', { count: 'exact', head: true }).contains('members', [this.user.id]);
+            if (count >= 3) {
+                this.toast('Limite gratuito (3). Faça upgrade para criar mais.');
+                document.getElementById('upgradeBtn').style.display = 'flex';
                 return;
             }
-            snap.forEach(function(doc) {
-                var data = doc.data();
-                var ext = data.name.split('.').pop().toLowerCase();
-                var icon = {js:'📜',html:'🌐',css:'🎨',py:'🐍',json:'📋'}[ext] || '📄';
-                var item = document.createElement('div');
-                item.className = 'fti' + (self.currentFile && self.currentFile.id === doc.id ? ' active' : '');
-                var iconSpan = document.createElement('span');
-                iconSpan.className = 'fii';
-                iconSpan.textContent = icon;
-                var nameSpan = document.createElement('span');
-                nameSpan.className = 'fnm';
-                nameSpan.textContent = data.name;
-                item.appendChild(iconSpan);
-                item.appendChild(nameSpan);
-                item.onclick = function() { self.openFile(doc.id, data); };
-                tree.appendChild(item);
-            });
-        },
-        showNewFileInput: function() {
-            document.getElementById('newFileRow').style.display = 'block';
-            document.getElementById('newFileInput').focus();
-        },
-        hideNewFileInput: function() {
-            document.getElementById('newFileRow').style.display = 'none';
-        },
-        createFile: function(name) {
-            var self = this;
-            if (!name) return;
-            if (!name.includes('.')) name += '.js';
-            this.hideNewFileInput();
-            var ext = name.split('.').pop().toLowerCase();
-            var code = DEFAULT_CODE[ext] || '';
-            db.collection('repos').doc(this.currentRepo.id).collection('files').add({
-                name: name,
-                content: code,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(function(ref) {
-                db.collection('repos').doc(self.currentRepo.id).update({
-                    fileCount: firebase.firestore.FieldValue.increment(1),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                self.openFile(ref.id, { name: name, content: code });
-            })
-            .catch(function(err) { self.toast('Erro: ' + err.message, 'err'); });
-        },
-        openFile: function(fileId, data) {
-            var self = this;
-            clearTimeout(this.syncTimer);
+        }
+        const repoData = {
+            name,
+            owner_id: this.user.id,
+            members: [this.user.id],
+            member_emails: { [this.user.id]: this.user.email },
+            readonly_token: Math.random().toString(36).substr(2, 12),
+            file_count: template ? TEMPLATES[template].length : 0
+        };
+        const { data: newRepo, error } = await supabase.from('repos').insert(repoData).select().single();
+        if (error) return this.toast('Erro: ' + error.message, 'err');
+        const repoId = newRepo.id;
+        if (template && TEMPLATES[template]) {
+            const files = TEMPLATES[template].map(f => ({
+                repo_id: repoId,
+                name: f.name,
+                content: f.content
+            }));
+            await supabase.from('files').insert(files);
+        }
+        this.toast('✅ Repositório criado!');
+        this.openRepo(repoId);
+    },
+    async joinRepo(id) {
+        const { data: repo, error } = await supabase.from('repos').select('members, member_emails').eq('id', id).single();
+        if (error || !repo) { this.toast('Repositório não encontrado.', 'err'); return; }
+        if (repo.members.includes(this.user.id)) { this.openRepo(id); return; }
+        const updatedMembers = [...repo.members, this.user.id];
+        const updatedEmails = { ...repo.member_emails, [this.user.id]: this.user.email };
+        const { error: updateErr } = await supabase.from('repos').update({ members: updatedMembers, member_emails: updatedEmails }).eq('id', id);
+        if (updateErr) { this.toast('Erro ao entrar: ' + updateErr.message, 'err'); return; }
+        this.openRepo(id);
+    },
+    async openRepo(repoId) {
+        if (this.repoListener) { this.repoListener(); this.repoListener = null; }
+        if (this.reposUnsub) { this.reposUnsub(); this.reposUnsub = null; }
+        const { data: repo, error } = await supabase.from('repos').select('*').eq('id', repoId).single();
+        if (error || !repo) { this.toast('Repositório não encontrado.', 'err'); return; }
+        this.currentRepo = repo;
+        const urlParams = new URLSearchParams(location.search);
+        const viewToken = urlParams.get('view');
+        this.isReadonly = (viewToken && viewToken === repo.readonly_token && !repo.members.includes(this.user.id));
+        document.getElementById('dashPage').style.display = 'none';
+        document.getElementById('editorPage').style.display = 'flex';
+        document.getElementById('collabBar').style.display = 'flex';
+        document.getElementById('navRepoName').style.display = 'flex';
+        document.getElementById('membersBtn').style.display = this.isReadonly ? 'none' : 'flex';
+        document.getElementById('historyBtn').style.display = this.isReadonly ? 'none' : 'flex';
+        document.getElementById('tasksBtn').style.display = this.isReadonly ? 'none' : 'flex';
+        document.getElementById('chatBtn').style.display = this.isReadonly ? 'none' : 'flex';
+        document.getElementById('shareRepoBtn').style.display = 'flex';
+        document.getElementById('navRepoTitle').textContent = repo.name;
+        document.getElementById('collabId').textContent = repoId;
+        if (this.editor) this.editor.setValue('');
+        this.openTabs = [];
+        this.currentFile = null;
+        history.pushState({}, '', '?repo=' + repoId);
+        // Realtime subscription para o repo
+        this.repoListener = supabase.channel('repo:'+repoId)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'repos', filter: `id=eq.${repoId}` }, (payload) => {
+                if (payload.new) this.currentRepo = payload.new;
+            }).subscribe();
+        this.listenFiles();
+        this.listenPresence();
+        this.listenSnapshots();
+        this.listenTasks();
+        this.listenChat();
+    },
+    listenFiles() {
+        const channel = supabase.channel('files:'+this.currentRepo.id)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'files', filter: `repo_id=eq.${this.currentRepo.id}` }, () => this.fetchFiles())
+            .subscribe();
+        this.unsubscribers.push(() => channel.unsubscribe());
+        this.fetchFiles();
+    },
+    async fetchFiles() {
+        const { data: files } = await supabase.from('files').select('*').eq('repo_id', this.currentRepo.id).order('name');
+        this.renderFileTree({ docs: files.map(f => ({ id: f.id, data: () => f })) });
+    },
+    renderFileTree(snap) {
+        const tree = document.getElementById('fileTree');
+        tree.innerHTML = '';
+        if (!snap.docs.length) {
+            tree.innerHTML = '<div style="color:var(--t3);font-size:11px;padding:14px;text-align:center">Vazio</div>';
+            return;
+        }
+        snap.docs.forEach(doc => {
+            const data = doc.data();
+            const ext = data.name.split('.').pop().toLowerCase();
+            const icon = {js:'📜',html:'🌐',css:'🎨',py:'🐍',json:'📋'}[ext] || '📄';
+            const item = document.createElement('div');
+            item.className = 'fti' + (this.currentFile && this.currentFile.id === doc.id ? ' active' : '');
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'fii';
+            iconSpan.textContent = icon;
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'fnm';
+            nameSpan.textContent = data.name;
+            item.appendChild(iconSpan);
+            item.appendChild(nameSpan);
+            item.onclick = () => this.openFile(doc.id, data);
+            tree.appendChild(item);
+        });
+    },
+    showNewFileInput() { document.getElementById('newFileRow').style.display = 'block'; document.getElementById('newFileInput').focus(); },
+    hideNewFileInput() { document.getElementById('newFileRow').style.display = 'none'; },
+    async createFile(name) {
+        if (!name) return;
+        if (!name.includes('.')) name += '.js';
+        this.hideNewFileInput();
+        const ext = name.split('.').pop().toLowerCase();
+        const code = DEFAULT_CODE[ext] || '';
+        const { data: file, error } = await supabase.from('files').insert({
+            repo_id: this.currentRepo.id,
+            name,
+            content: code
+        }).select().single();
+        if (error) return this.toast('Erro: '+error.message, 'err');
+        await supabase.from('repos').update({ file_count: this.currentRepo.file_count+1, updated_at: new Date() }).eq('id', this.currentRepo.id);
+        this.openFile(file.id, { name, content: code });
+    },
+    async openFile(fileId, data) {
+        this.currentFile = { id: fileId, name: data.name };
+        if (this.editor) {
+            this.editor.setValue(data.content || '');
+            this.editor.updateOptions({ readOnly: this.isReadonly });
+        }
+        const ext = data.name.split('.').pop().toLowerCase();
+        const language = LANGUAGE_MAP[ext] || 'plaintext';
+        if (this.editor?.getModel) {
+            monaco.editor.setModelLanguage(this.editor.getModel(), language);
+        }
+        document.getElementById('langBadge').textContent = language;
+        // Yjs: desconectar anterior e criar novo doc
+        if (this.yprovider) {
+            this.yprovider.disconnect();
+            this.ydoc.destroy();
+        }
+        if (!this.isReadonly) {
+            this.setupYjsCollaboration(fileId);
+        }
+    },
+    setupYjsCollaboration(fileId) {
+        const docName = `repo:${this.currentRepo.id}:file:${fileId}`;
+        this.ydoc = new Y.Doc();
+        const provider = new YSupabaseProvider(supabase, docName, this.ydoc, { channel: 'collab-'+docName });
+        this.yprovider = provider;
+        const type = this.ydoc.getText('monaco');
+        const binding = new YMonacoBinding(type, this.editor.getModel(), new Set([this.editor]), provider.awareness);
+        this.ybinding = binding;
+        provider.awareness.setLocalStateField('user', {
+            name: this.user.email,
+            color: CURSOR_COLORS[0]
+        });
+    },
+    onEditorInput() {
+        // Yjs handle automatically, but we also update the file content periodically
+        if (!this.currentRepo || !this.currentFile || this.isReadonly) return;
+        this.setSyncState('syncing');
+        clearTimeout(this.syncTimer);
+        this.syncTimer = setTimeout(async () => {
             this.syncTimer = null;
-            if (this.fileUnsub) { this.fileUnsub(); this.fileUnsub = null; }
-            self.currentFile = { id: fileId, name: data.name };
-            if (self.editor) {
-                self.editor.setValue(data.content || '');
-                self.editor.updateOptions({ readOnly: self.isReadonly });
-            }
-            var ext = data.name.split('.').pop().toLowerCase();
-            var language = LANGUAGE_MAP[ext] || 'plaintext';
-            if (self.editor) {
-                if (self.editor.getModel()) {
-                    monaco.editor.setModelLanguage(self.editor.getModel(), language);
+            const content = this.editor.getValue();
+            const { error } = await supabase.from('files').update({ content, updated_at: new Date() }).eq('id', this.currentFile.id);
+            if (!error) this.setSyncState('ok');
+            else this.setSyncState('err');
+        }, 500);
+    },
+    setSyncState(state) {
+        const dot = document.getElementById('syncDot');
+        dot.className = 'syd' + (state === 'syncing' ? ' syncing' : '');
+    },
+    async listenPresence() {
+        // utilizamos a tabela presence
+        if (this._rtdbPresenceRef) { this._rtdbPresenceRef.unsubscribe(); }
+        const channel = supabase.channel('presence:'+this.currentRepo.id)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'presence', filter: `repo_id=eq.${this.currentRepo.id}` }, () => this.fetchPresence())
+            .subscribe();
+        this._rtdbPresenceRef = channel;
+        // registar presença
+        await supabase.from('presence').upsert({ user_id: this.user.id, repo_id: this.currentRepo.id, email: this.user.email, online: true, last_seen: new Date() });
+        window.addEventListener('beforeunload', () => supabase.from('presence').update({ online: false }).eq('user_id', this.user.id));
+        this.fetchPresence();
+    },
+    async fetchPresence() {
+        const { data: presences } = await supabase.from('presence').select('*').eq('repo_id', this.currentRepo.id);
+        this.onlineUsers = {};
+        if (presences) {
+            presences.forEach(p => {
+                if (p.user_id !== this.user.id && p.online) {
+                    this.onlineUsers[p.user_id] = { email: p.email, online: true, cursorLine: p.cursor_line, cursorColumn: p.cursor_column, cursorFile: p.cursor_file_id };
                 }
-            }
-            document.getElementById('langBadge').textContent = language;
-            this.fileUnsub = db.collection('repos').doc(this.currentRepo.id)
-                .collection('files').doc(fileId)
-                .onSnapshot({ includeMetadataChanges: false }, function(doc) {
-                    if (!doc.exists || self.isReadonly) return;
-                    if (doc.metadata.hasPendingWrites) return;
-                    var remoteData = doc.data();
-                    if (self.editor && remoteData.content !== undefined && remoteData.content !== self.editor.getValue()) {
-                        var position = self.editor.getPosition();
-                        self.editor.setValue(remoteData.content);
-                        self.editor.setPosition(position);
-                    }
-                });
-        },
-        onEditorInput: function() {
-            var self = this;
-            if (!this.currentRepo || !this.currentFile || this.isReadonly) return;
-            this.setSyncState('syncing');
-            clearTimeout(this.syncTimer);
-            this.syncTimer = setTimeout(function() {
-                self.syncTimer = null;
-                var content = self.editor.getValue();
-                db.collection('repos').doc(self.currentRepo.id)
-                    .collection('files').doc(self.currentFile.id)
-                    .update({
-                        content: content,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    })
-                    .then(function() { self.setSyncState('ok'); })
-                    .catch(function() { self.setSyncState('err'); });
-            }, 500);
-        },
-        setSyncState: function(state) {
-            var dot = document.getElementById('syncDot');
-            dot.className = 'syd' + (state === 'syncing' ? ' syncing' : '');
-        },
-        
-        listenPresence: function() {
-            var self = this;
-            if (this._rtdbPresenceRef) { this._rtdbPresenceRef.off(); }
-            var presenceRef = rtdb.ref('presence/' + this.currentRepo.id + '/' + this.user.uid);
-            presenceRef.set({ email: this.user.email, online: true });
-            presenceRef.onDisconnect().set({ email: this.user.email, online: false });
-            var allRef = rtdb.ref('presence/' + this.currentRepo.id);
-            allRef.on('value', function(snap) {
-                self.onlineUsers = {};
-                snap.forEach(function(child) {
-                    if (child.key !== self.user.uid) {
-                        self.onlineUsers[child.key] = child.val();
-                    }
-                });
-                self.renderPresence();
-                self.renderCursorDecorations();
             });
-            this._rtdbPresenceRef = allRef;
-        },
-        broadcastCursor: function(cursorEvent) {
-            if (!this.currentRepo || !this.currentFile || this.isReadonly) return;
-            clearTimeout(this.cursorTimer);
-            this.cursorTimer = setTimeout(function() {
-                var pos = APP.editor.getPosition();
-                db.collection('repos').doc(APP.currentRepo.id)
-                    .collection('presence').doc(APP.user.uid)
-                    .update({
-                        cursorLine: pos.lineNumber,
-                        cursorColumn: pos.column,
-                        cursorFile: APP.currentFile.id
-                    }).catch(function(){});
-            }, 100);
-        },
-        renderPresence: function() {
-            var bar = document.getElementById('presenceBar');
-            bar.innerHTML = '';
-            var i = 0;
-            for (var uid in this.onlineUsers) {
-                var u = this.onlineUsers[uid];
-                if (!u.online) continue;
-                var dot = document.createElement('div');
-                dot.className = 'pd';
-                dot.style.background = CURSOR_COLORS[i % CURSOR_COLORS.length];
-                dot.textContent = u.email[0].toUpperCase();
-                dot.title = u.email;
-                bar.appendChild(dot);
-                i++;
-            }
-        },
-        renderCursorDecorations: function() {
-            if (!this.editor) return;
-            if (!this.editor.getModel || !this.editor.getModel()) return;
-            if (typeof monaco === 'undefined') return;
-            var decorations = [];
-            var i = 0;
-            for (var uid in this.onlineUsers) {
-                var u = this.onlineUsers[uid];
-                if (!u.online || !u.cursorFile || u.cursorFile !== this.currentFile.id) continue;
-                decorations.push({
-                    range: new monaco.Range(u.cursorLine, u.cursorColumn, u.cursorLine, u.cursorColumn + 1),
-                    options: {
-                        className: 'remote-cursor-' + i,
-                        hoverMessage: { value: u.email },
-                        zIndex: 100
-                    }
-                });
-                i++;
-            }
-            this._cursorDecorations = this.editor.deltaDecorations(this._cursorDecorations, decorations);
-        },
-        
-        openHistory: function() { document.getElementById('historyPanel').classList.add('open'); },
-        closeHistory: function() { document.getElementById('historyPanel').classList.remove('open'); },
-        listenSnapshots: function() {
-            var self = this;
-            var unsub = db.collection('repos').doc(self.currentRepo.id)
-                .collection('snapshots').orderBy('createdAt','desc')
-                .onSnapshot(function(snap) { self.renderSnapshots(snap); });
-            this.unsubscribers.push(unsub);
-        },
-        renderSnapshots: function(snap) {
-            var list = document.getElementById('historyList');
-            list.innerHTML = '';
-            if (snap.empty) {
-                list.innerHTML = '<div style="color:var(--t3);font-size:11px;text-align:center;padding:16px">Nenhuma versão</div>';
-                return;
-            }
-            var self = this;
-            snap.forEach(function(doc) {
-                var data = doc.data();
-                var item = document.createElement('div');
-                item.className = 'hi';
-                var dateStr = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleString() : '';
-                var hih = document.createElement('div');
-                hih.className = 'hih';
-                var authorSpan = document.createElement('span');
-                authorSpan.className = 'ha2';
-                authorSpan.textContent = data.authorEmail;
-                var dateSpan = document.createElement('span');
-                dateSpan.className = 'hd';
-                dateSpan.textContent = dateStr;
-                hih.appendChild(authorSpan);
-                hih.appendChild(dateSpan);
-                var commentDiv = document.createElement('div');
-                commentDiv.className = 'hc';
-                commentDiv.textContent = data.comment;
-                item.appendChild(hih);
-                item.appendChild(commentDiv);
-                var viewBtn = document.createElement('button');
-                viewBtn.className = 'hbtn';
-                viewBtn.textContent = '👁 Ver';
-                viewBtn.onclick = function() { self.viewSnapshotDiff(doc.id); };
-                var restoreBtn = document.createElement('button');
-                restoreBtn.className = 'hbtn restore';
-                restoreBtn.textContent = '↩ Restaurar';
-                restoreBtn.onclick = function() { self.restoreSnapshotById(doc.id); };
-                item.appendChild(viewBtn);
-                item.appendChild(restoreBtn);
-                list.appendChild(item);
-            });
-        },
-        saveSnapshot: function() {
-            var self = this;
-            if (!this.currentRepo || !this.currentFile) return this.toast('Abra um arquivo.', 'err');
-            var btn = document.getElementById('saveSnapshotBtn');
-            btn.disabled = true;
-            btn.textContent = 'Salvando...';
-            var comment = document.getElementById('snapshotComment').value.trim() || 'Versão ' + new Date().toLocaleString();
-            var code = this.editor.getValue();
-            db.collection('repos').doc(this.currentRepo.id).collection('snapshots').add({
-                authorEmail: this.user.email,
-                authorId: this.user.uid,
-                comment: comment,
-                content: code,
-                fileId: this.currentFile.id,
-                fileName: this.currentFile.name,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(function() {
-                self.toast('✅ Versão salva!');
-                document.getElementById('snapshotComment').value = '';
-            })
-            .catch(function(err) { self.toast('Erro: ' + err.message, 'err'); })
-            .finally(function() { btn.disabled = false; btn.textContent = '💾 Salvar Versão'; });
-        },
-        viewSnapshotDiff: function(snapshotId) {
-            var self = this;
-            db.collection('repos').doc(this.currentRepo.id).collection('snapshots').doc(snapshotId).get()
-                .then(function(doc) {
-                    if (!doc.exists) return;
-                    var snapshotContent = doc.data().content;
-                    var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-                    if (isMobile) {
-                        self.editor.setValue(snapshotContent);
-                        self.toast('Modo diff indisponível no mobile. Versão carregada.');
-                        return;
-                    }
-                    var currentContent = self.editor.getValue();
-                    var container = document.getElementById('monacoContainer');
-                    container.innerHTML = '';
-                    self.diffEditor = monaco.editor.createDiffEditor(container, {
-                        theme: 'vs-dark',
-                        fontFamily: 'JetBrains Mono, monospace',
-                        fontSize: 14,
-                        readOnly: true,
-                        renderSideBySide: true,
-                        automaticLayout: true
-                    });
-                    self.diffEditor.setModel({
-                        original: monaco.editor.createModel(snapshotContent, 'text/plain'),
-                        modified: monaco.editor.createModel(currentContent, 'text/plain')
-                    });
-                    document.getElementById('diffToolbar').style.display = 'flex';
-                    document.getElementById('mainToolbar').style.display = 'none';
-                    document.getElementById('restoreSnapshotBtn').dataset.snapshotId = snapshotId;
-                    self.toast('Comparando versões');
-                });
-        },
-        closeDiff: function() {
-            var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            if (this.diffEditor) {
-                this.diffEditor.dispose();
-                this.diffEditor = null;
-            }
-            if (!isMobile) {
-                document.getElementById('monacoContainer').innerHTML = '';
-                this.initMonacoEditor();
-            }
-            document.getElementById('diffToolbar').style.display = 'none';
-            document.getElementById('mainToolbar').style.display = 'flex';
-        },
-        restoreSnapshot: function() {
-            var snapshotId = document.getElementById('restoreSnapshotBtn').dataset.snapshotId;
-            if (snapshotId) this.restoreSnapshotById(snapshotId);
-        },
-        restoreSnapshotById: function(id) {
-            var self = this;
-            self.showConfirm('Restaurar esta versão? O código atual será sobrescrito.', function() {
-                db.collection('repos').doc(self.currentRepo.id).collection('snapshots').doc(id).get()
-                    .then(function(doc) {
-                        if (!doc.exists) return;
-                        var content = doc.data().content;
-                        if (self.editor) {
-                            self.editor.setValue(content);
-                            self.editor.updateOptions({ readOnly: false });
-                        }
-                        self.isReadonly = false;
-                        document.getElementById('readonlyOverlay').classList.remove('show');
-                        self.onEditorInput();
-                        self.toast('✅ Versão restaurada!');
-                        if (self.diffEditor) self.closeDiff();
-                    })
-                    .catch(function(err) { self.toast('Erro: ' + err.message, 'err'); });
-            });
-        },
-        exitReadonly: function() {
-            this.isReadonly = false;
-            if (this.editor) this.editor.updateOptions({ readOnly: false });
-            document.getElementById('readonlyOverlay').classList.remove('show');
-        },
-        
-        openTasks: function() { document.getElementById('tasksPanel').classList.add('open'); },
-        closeTasks: function() { document.getElementById('tasksPanel').classList.remove('open'); },
-        listenTasks: function() {
-            var self = this;
-            var unsub = db.collection('repos').doc(self.currentRepo.id)
-                .collection('tasks').orderBy('createdAt')
-                .onSnapshot(function(snap) { self.renderTasks(snap); });
-            this.unsubscribers.push(unsub);
-        },
-        renderTasks: function(snap) {
-            var cols = document.getElementById('tasksColumns');
-            var tasks = { todo:[], progress:[], done:[] };
-            snap.forEach(function(doc) {
-                var data = doc.data();
-                data.id = doc.id;
-                if (data.status === 'done') tasks.done.push(data);
-                else if (data.status === 'progress') tasks.progress.push(data);
-                else tasks.todo.push(data);
-            });
-            cols.innerHTML = '';
-            var columns = [
-                { id:'todo', label:'A fazer', color:'var(--t2)' },
-                { id:'progress', label:'Em progresso', color:'var(--or)' },
-                { id:'done', label:'Concluído', color:'var(--gn)' }
-            ];
-            var self = this;
-            columns.forEach(function(col) {
-                var div = document.createElement('div');
-                div.className = 'tcol';
-                var title = document.createElement('div');
-                title.className = 'tct';
-                title.style.color = col.color;
-                title.textContent = col.label + ' (' + tasks[col.id].length + ')';
-                div.appendChild(title);
-                tasks[col.id].forEach(function(task) {
-                    var item = document.createElement('div');
-                    item.className = 'ti';
-                    var checkbox = document.createElement('div');
-                    checkbox.className = 'tcb' + (task.status === 'done' ? ' done' : '');
-                    checkbox.onclick = function() { self.toggleTask(task.id, task.status); };
-                    var text = document.createElement('span');
-                    text.className = 'tt' + (task.status === 'done' ? ' done' : '');
-                    text.textContent = task.text;
-                    var delBtn = document.createElement('button');
-                    delBtn.className = 'tdel';
-                    delBtn.textContent = '✕';
-                    delBtn.onclick = function() { self.deleteTask(task.id); };
-                    item.appendChild(checkbox);
-                    item.appendChild(text);
-                    item.appendChild(delBtn);
-                    div.appendChild(item);
-                });
-                cols.appendChild(div);
-            });
-        },
-        addTask: function() {
-            var text = document.getElementById('taskInput').value.trim();
-            if (!text || !this.currentRepo) return;
-            document.getElementById('taskInput').value = '';
-            db.collection('repos').doc(this.currentRepo.id).collection('tasks').add({
-                text: text,
-                status: 'todo',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(function(err) { APP.toast('Erro: ' + err.message, 'err'); });
-        },
-        toggleTask: function(id, currentStatus) {
-            var newStatus = currentStatus === 'todo' ? 'progress' : (currentStatus === 'progress' ? 'done' : 'todo');
-            db.collection('repos').doc(this.currentRepo.id).collection('tasks').doc(id).update({ status: newStatus });
-        },
-        deleteTask: function(id) {
-            APP.showConfirm('Excluir esta tarefa permanentemente?', function() {
-                db.collection('repos').doc(APP.currentRepo.id).collection('tasks').doc(id).delete()
-                    .catch(function(err) { APP.toast('Erro: ' + err.message, 'err'); });
-            });
-        },
-        
-        openChat: function() { document.getElementById('chatPanel').classList.add('open'); },
-        closeChat: function() { document.getElementById('chatPanel').classList.remove('open'); },
-        listenChat: function() {
-            var self = this;
-            var unsub = db.collection('repos').doc(self.currentRepo.id)
-                .collection('chat').orderBy('createdAt').limitToLast(200)
-                .onSnapshot(function(snap) { self.renderChat(snap); });
-            this.unsubscribers.push(unsub);
-        },
-        renderChat: function(snap) {
-            var list = document.getElementById('chatMessages');
-            list.innerHTML = '';
-            var self = this;
-            snap.forEach(function(doc) {
-                var data = doc.data();
-                var isSelf = data.authorId === self.user.uid;
-                var wrapper = document.createElement('div');
-                wrapper.className = 'chat-message ' + (isSelf ? 'self' : 'other');
-                var avatar = document.createElement('div');
-                avatar.className = 'chat-avatar';
-                avatar.textContent = data.authorEmail[0].toUpperCase();
-                var bubble = document.createElement('div');
-                bubble.className = 'chat-bubble';
-                var text = document.createElement('span');
-                text.textContent = data.text;
-                var time = document.createElement('span');
-                time.className = 'chat-time';
-                time.textContent = data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '';
-                bubble.appendChild(text);
-                bubble.appendChild(time);
-                wrapper.appendChild(avatar);
-                wrapper.appendChild(bubble);
-                list.appendChild(wrapper);
-            });
-            list.scrollTop = list.scrollHeight;
-        },
-        sendChatMessage: function() {
-            var text = document.getElementById('chatInput').value.trim();
-            if (!text || !this.currentRepo) return;
-            if (text.length > 500) return this.toast('Máximo 500 caracteres.', 'err');
-            document.getElementById('chatInput').value = '';
-            db.collection('repos').doc(this.currentRepo.id).collection('chat').add({
-                text: text,
-                authorId: this.user.uid,
-                authorEmail: this.user.email,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(function(err) { APP.toast('Erro ao enviar: ' + err.message, 'err'); });
-        },
-        
-        openShareModal: function() {
-            var collabLink = location.origin + location.pathname + '?repo=' + this.currentRepo.id;
-            var readonlyLink = location.origin + location.pathname + '?repo=' + this.currentRepo.id + '&view=' + this.currentRepo.readonlyToken;
-            document.getElementById('shareCollabLink').value = collabLink;
-            document.getElementById('shareReadonlyLink').value = readonlyLink;
-            document.getElementById('shareModal').classList.add('show');
-        },
-        copyShareLink: function(type) {
-            var input = document.getElementById(type === 'collab' ? 'shareCollabLink' : 'shareReadonlyLink');
-            input.select();
-            document.execCommand('copy');
-            this.toast('✅ Link copiado!');
-        },
-        
-        showMembers: function() {
-            var self = this;
-            if (!this.currentRepo) return;
-            var list = document.getElementById('membersList');
-            list.innerHTML = 'Carregando...';
-            document.getElementById('membersModal').classList.add('show');
-            db.collection('repos').doc(this.currentRepo.id).get().then(function(doc) {
-                var data = doc.data();
-                var members = data.members || [];
-                var emails = data.memberEmails || {};
-                list.innerHTML = '';
-                members.forEach(function(uid, i) {
-                    var email = emails[uid] || uid.substring(0,8) + '...';
-                    var isOwner = uid === data.ownerId;
-                    var isSelf = uid === self.user.uid;
-                    var isOnline = isSelf || (self.onlineUsers[uid] && self.onlineUsers[uid].online);
-                    var row = document.createElement('div');
-                    row.className = 'mr';
-                    var maDiv = document.createElement('div');
-                    maDiv.className = 'ma';
-                    maDiv.style.background = CURSOR_COLORS[i % CURSOR_COLORS.length];
-                    maDiv.textContent = email[0].toUpperCase();
-                    var meDiv = document.createElement('div');
-                    meDiv.className = 'me';
-                    meDiv.textContent = email + (isSelf ? ' (você)' : '');
-                    var roleDiv = document.createElement('div');
-                    roleDiv.className = 'mrole';
-                    roleDiv.textContent = isOwner ? '👑 Dono' : 'Colaborador';
-                    var onlineDiv = document.createElement('div');
-                    onlineDiv.className = 'mon' + (isOnline ? '' : ' offline');
-                    row.appendChild(maDiv);
-                    row.appendChild(meDiv);
-                    row.appendChild(roleDiv);
-                    row.appendChild(onlineDiv);
-                    list.appendChild(row);
-                });
-            });
-        },
-        
-        downloadCurrentFile: function() {
-            if (!this.currentFile) return;
-            var content = this.editor.getValue();
-            var blob = new Blob([content], { type: 'text/plain' });
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = this.currentFile.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        },
-        
-        runCode: function() {
-            var code = this.editor.getValue();
-            var file = this.currentFile;
-            if (!file) return;
-            var ext = file.name.split('.').pop().toLowerCase();
-            if (ext === 'html') {
-                this.switchOutput('preview');
-                document.getElementById('previewOut').src = URL.createObjectURL(new Blob([code], { type: 'text/html' }));
-                return;
-            }
-            this.switchOutput('console');
-            var outputEl = document.getElementById('consoleOut');
-            if (ext === 'js') {
-                outputEl.textContent = '⏳ Executando...';
-                var sandboxFrame = document.createElement('iframe');
-                sandboxFrame.style.display = 'none';
-                sandboxFrame.sandbox = 'allow-scripts';
-                document.body.appendChild(sandboxFrame);
-                var finished = false;
-                var timeoutId = setTimeout(function() {
-                    if (!finished) {
-                        outputEl.textContent = '⏱ Timeout: execução excedeu 5 segundos';
-                        sandboxFrame.remove();
-                    }
-                }, 5000);
-                function messageHandler(event) {
-                    if (event.source !== sandboxFrame.contentWindow) return;
-                    finished = true;
-                    clearTimeout(timeoutId);
-                    window.removeEventListener('message', messageHandler);
-                    sandboxFrame.remove();
-                    if (event.data.error) {
-                        outputEl.textContent = '❌ ' + event.data.error;
-                    } else {
-                        outputEl.textContent = event.data.logs || '✅ Executado sem output';
-                    }
-                }
-                window.addEventListener('message', messageHandler);
-                var safeCode = code.replace(/<\/script>/gi, '<\\/script>');
-                sandboxFrame.srcdoc = '<!DOCTYPE html><html><body><script>' +
-                    'var _logs = [];' +
-                    'console.log = function() { _logs.push(Array.from(arguments).map(String).join(" ")); };' +
-                    'try {' + safeCode + '; parent.postMessage({ logs: _logs.join("\\n") }, "*"); } catch(e) { parent.postMessage({ error: e.message }, "*"); }' +
-                    '<\/script></body></html>';
-            } else {
-                outputEl.textContent = '▶ Use .js ou .html';
-            }
-        },
-        switchOutput: function(tab) {
-            document.getElementById('tabConsole').classList.toggle('active', tab === 'console');
-            document.getElementById('tabPreview').classList.toggle('active', tab === 'preview');
-            document.getElementById('consoleOut').style.display = tab === 'console' ? 'block' : 'none';
-            document.getElementById('previewOut').style.display = tab === 'preview' ? 'block' : 'none';
-        },
-        
-        copyRepoId: function() {
-            var id = this.currentRepo ? this.currentRepo.id : '';
-            if (!id) return;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(id).then(function() { APP.toast('✅ ID copiado!'); });
-            } else {
-                APP.toast('Copie: ' + id);
-            }
-        },
-        
-        setupSplitter: function() {
-            var self = this;
-            var sp = document.getElementById('splitterH');
-            var op = document.getElementById('outputPanel');
-            var dragging = false, startY, startH;
-            sp.onmousedown = function(e) {
-                dragging = true; startY = e.clientY; startH = op.offsetHeight;
-                sp.classList.add('dragging');
-            };
-            this._splitterMove = function(e) {
-                if (!dragging) return;
-                var h = Math.max(60, Math.min(500, startH + (startY - e.clientY)));
-                op.style.height = h + 'px';
-                if (self.editor) self.editor.layout();
-            };
-            this._splitterUp = function() {
-                dragging = false; sp.classList.remove('dragging');
-            };
-            document.addEventListener('mousemove', this._splitterMove);
-            document.addEventListener('mouseup', this._splitterUp);
-        },
-        toggleSidebar: function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        },
-        
-        showConfirm: function(message, onConfirm) {
-            var existing = document.getElementById('_confirmModal');
-            if (existing) existing.remove();
-            var overlay = document.createElement('div');
-            overlay.id = '_confirmModal';
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999';
-            var box = document.createElement('div');
-            box.style.cssText = 'background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:24px;max-width:360px;width:90%';
-            var p = document.createElement('p');
-            p.style.cssText = 'margin-bottom:20px;font-size:14px;color:var(--tx);line-height:1.5';
-            p.textContent = message;
-            var row = document.createElement('div');
-            row.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
-            var confirmBtn = document.createElement('button');
-            confirmBtn.textContent = 'Confirmar';
-            confirmBtn.style.cssText = 'padding:8px 16px;background:var(--rd);color:#fff;border:none;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600';
-            var cancelBtn = document.createElement('button');
-            cancelBtn.textContent = 'Cancelar';
-            cancelBtn.style.cssText = 'padding:8px 16px;background:transparent;color:var(--t2);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;font-size:13px';
-            confirmBtn.onclick = function() { overlay.remove(); onConfirm(); };
-            cancelBtn.onclick = function() { overlay.remove(); };
-            row.appendChild(cancelBtn);
-            row.appendChild(confirmBtn);
-            box.appendChild(p);
-            box.appendChild(row);
-            overlay.appendChild(box);
-            document.body.appendChild(overlay);
-        },
-        cleanup: function() {
-            this.unsubscribers.forEach(function(u) { if (typeof u === 'function') u(); });
-            this.unsubscribers = [];
-            if (this.presenceUnsub) { this.presenceUnsub(); this.presenceUnsub = null; }
-            if (this.fileUnsub) { this.fileUnsub(); this.fileUnsub = null; }
-            if (this.repoListener) { this.repoListener(); this.repoListener = null; }
-            if (this._rtdbPresenceRef) { this._rtdbPresenceRef.off(); this._rtdbPresenceRef = null; }
-            if (this._splitterMove) {
-                document.removeEventListener('mousemove', this._splitterMove);
-                this._splitterMove = null;
-            }
-            if (this._splitterUp) {
-                document.removeEventListener('mouseup', this._splitterUp);
-                this._splitterUp = null;
-            }
-            clearTimeout(this.syncTimer);
-            clearTimeout(this.cursorTimer);
-        },
-        toast: function(msg, type) {
-            var el = document.createElement('div');
-            el.className = 'toast';
-            if (type === 'err') el.style.borderColor = 'rgba(248,81,73,.4)';
-            el.textContent = msg;
-            document.body.appendChild(el);
-            setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function() { el.remove(); }, 300); }, 2500);
-        },
-        showError: function(msg) {
-            var el = document.getElementById('errMsg');
-            el.textContent = msg;
-            el.style.display = 'block';
-            setTimeout(function() { el.style.display = 'none'; }, 4000);
-        },
-        translateError: function(err) {
-            var map = {
-                'auth/email-already-in-use': 'Email já cadastrado.',
-                'auth/invalid-email': 'Email inválido.',
-                'auth/weak-password': 'Senha fraca.',
-                'auth/user-not-found': 'Usuário não encontrado.',
-                'auth/wrong-password': 'Senha incorreta.',
-                'auth/too-many-requests': 'Muitas tentativas.',
-                'auth/network-request-failed': 'Sem conexão.'
-            };
-            return map[err.code] || err.message;
-        },
-        
-        // Inicializa Monaco no desktop ou editor fallback no mobile
-        initMonacoEditor: function() {
-            var self = this;
-            var isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            if (isMobile) {
-                var ta = document.getElementById('mobileEditor');
-                ta.style.display = 'block';
-                // Objeto compatível com a API do Monaco usada no restante do código
-                this.editor = {
-                    _ta: ta,
-                    getValue: function() { return ta.value; },
-                    setValue: function(v) { ta.value = v; },
-                    updateOptions: function(opts) {
-                        if (opts.readOnly !== undefined) ta.readOnly = opts.readOnly;
-                    },
-                    getPosition: function() { return null; },
-                    setPosition: function() {},
-                    getModel: function() { return null; },
-                    layout: function() {},
-                    deltaDecorations: function() { return []; },
-                    onDidChangeModelContent: function(cb) {
-                        ta.addEventListener('input', cb);
-                    },
-                    onDidChangeCursorPosition: function() {},
-                    dispose: function() {}
-                };
-                // Conectar input ao onEditorInput igual ao Monaco
-                ta.addEventListener('input', function() { self.onEditorInput(); });
-                APP.init();
-                return;
-            }
-            // Desktop: carrega Monaco normalmente
-            var loaderScript = document.createElement('script');
-            loaderScript.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js';
-            loaderScript.onload = function() {
-                require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
-                require(['vs/editor/editor.main'], function() {
-                    self.editor = monaco.editor.create(document.getElementById('monacoContainer'), {
-                        value: '',
-                        language: 'javascript',
-                        theme: 'vs-dark',
-                        fontFamily: 'JetBrains Mono, monospace',
-                        fontSize: 14,
-                        minimap: { enabled: false },
-                        wordWrap: 'on',
-                        scrollBeyondLastLine: false,
-                        automaticLayout: true,
-                        tabSize: 2,
-                        renderLineHighlight: 'all',
-                        readOnly: self.isReadonly
-                    });
-                    self.editor.onDidChangeModelContent(function() { self.onEditorInput(); });
-                    self.editor.onDidChangeCursorPosition(function(e) { self.broadcastCursor(e); });
-                    if (self.currentFile && self.currentFile.content) {
-                        self.editor.setValue(self.currentFile.content);
-                    }
-                    APP.init();
-                });
-            };
-            loaderScript.onerror = function() {
-                self.toast('Falha ao carregar o editor.', 'err');
-            };
-            document.head.appendChild(loaderScript);
         }
-    };
-    
+        this.renderPresence();
+        this.renderCursorDecorations();
+    },
+    broadcastCursor(cursorEvent) {
+        if (!this.currentRepo || !this.currentFile || this.isReadonly) return;
+        clearTimeout(this.cursorTimer);
+        this.cursorTimer = setTimeout(async () => {
+            const pos = this.editor.getPosition();
+            await supabase.from('presence').upsert({
+                user_id: this.user.id,
+                repo_id: this.currentRepo.id,
+                email: this.user.email,
+                online: true,
+                cursor_line: pos.lineNumber,
+                cursor_column: pos.column,
+                cursor_file_id: this.currentFile.id,
+                last_seen: new Date()
+            });
+        }, 100);
+    },
+    renderPresence() {
+        const bar = document.getElementById('presenceBar');
+        bar.innerHTML = '';
+        let i = 0;
+        for (const uid in this.onlineUsers) {
+            const u = this.onlineUsers[uid];
+            const dot = document.createElement('div');
+            dot.className = 'pd';
+            dot.style.background = CURSOR_COLORS[i % CURSOR_COLORS.length];
+            dot.textContent = u.email[0].toUpperCase();
+            dot.title = u.email;
+            bar.appendChild(dot);
+            i++;
+        }
+    },
+    renderCursorDecorations() {
+        if (!this.editor || !this.editor.getModel) return;
+        const decorations = [];
+        let i = 0;
+        for (const uid in this.onlineUsers) {
+            const u = this.onlineUsers[uid];
+            if (u.cursorFile !== this.currentFile?.id) continue;
+            decorations.push({
+                range: new monaco.Range(u.cursorLine, u.cursorColumn, u.cursorLine, u.cursorColumn+1),
+                options: { className: 'remote-cursor-'+ (i % CURSOR_COLORS.length), hoverMessage: { value: u.email }, zIndex: 100 }
+            });
+            i++;
+        }
+        this._cursorDecorations = this.editor.deltaDecorations(this._cursorDecorations, decorations);
+    },
+    openHistory() { document.getElementById('historyPanel').classList.add('open'); },
+    closeHistory() { document.getElementById('historyPanel').classList.remove('open'); },
+    listenSnapshots() {
+        const channel = supabase.channel('snapshots:'+this.currentRepo.id)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'snapshots', filter: `repo_id=eq.${this.currentRepo.id}` }, () => this.fetchSnapshots())
+            .subscribe();
+        this.unsubscribers.push(() => channel.unsubscribe());
+        this.fetchSnapshots();
+    },
+    async fetchSnapshots() {
+        const { data: snaps } = await supabase.from('snapshots').select('*').eq('repo_id', this.currentRepo.id).order('created_at', { ascending: false });
+        this.renderSnapshots({ docs: snaps.map(s => ({ id: s.id, data: () => s })) });
+    },
+    renderSnapshots(snap) {
+        const list = document.getElementById('historyList');
+        list.innerHTML = '';
+        if (!snap.docs.length) {
+            list.innerHTML = '<div style="color:var(--t3);font-size:11px;text-align:center;padding:16px">Nenhuma versão</div>';
+            return;
+        }
+        snap.docs.forEach(doc => {
+            const data = doc.data();
+            const item = document.createElement('div');
+            item.className = 'hi';
+            const dateStr = data.created_at ? new Date(data.created_at).toLocaleString() : '';
+            const hih = document.createElement('div');
+            hih.className = 'hih';
+            hih.innerHTML = `<span class="ha2">${data.author_email}</span><span class="hd">${dateStr}</span>`;
+            const commentDiv = document.createElement('div');
+            commentDiv.className = 'hc';
+            commentDiv.textContent = data.comment;
+            item.appendChild(hih);
+            item.appendChild(commentDiv);
+            const viewBtn = document.createElement('button');
+            viewBtn.className = 'hbtn';
+            viewBtn.textContent = '👁 Ver';
+            viewBtn.onclick = () => this.viewSnapshotDiff(doc.id);
+            const restoreBtn = document.createElement('button');
+            restoreBtn.className = 'hbtn restore';
+            restoreBtn.textContent = '↩ Restaurar';
+            restoreBtn.onclick = () => this.restoreSnapshotById(doc.id);
+            item.appendChild(viewBtn);
+            item.appendChild(restoreBtn);
+            list.appendChild(item);
+        });
+    },
+    async saveSnapshot() {
+        if (!this.currentRepo || !this.currentFile) return this.toast('Abra um arquivo.', 'err');
+        const btn = document.getElementById('saveSnapshotBtn');
+        btn.disabled = true;
+        btn.textContent = 'Salvando...';
+        const comment = document.getElementById('snapshotComment').value.trim() || 'Versão ' + new Date().toLocaleString();
+        const code = this.editor.getValue();
+        const { error } = await supabase.from('snapshots').insert({
+            repo_id: this.currentRepo.id,
+            file_id: this.currentFile.id,
+            file_name: this.currentFile.name,
+            content: code,
+            comment,
+            author_id: this.user.id,
+            author_email: this.user.email
+        });
+        if (error) this.toast('Erro: ' + error.message, 'err');
+        else {
+            this.toast('✅ Versão salva!');
+            document.getElementById('snapshotComment').value = '';
+        }
+        btn.disabled = false;
+        btn.textContent = '💾 Salvar Versão';
+    },
+    async viewSnapshotDiff(snapshotId) {
+        const { data: snap } = await supabase.from('snapshots').select('content').eq('id', snapshotId).single();
+        if (!snap) return;
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) {
+            this.editor.setValue(snap.content);
+            this.toast('Modo diff indisponível no mobile. Versão carregada.');
+            return;
+        }
+        const currentContent = this.editor.getValue();
+        const container = document.getElementById('monacoContainer');
+        container.innerHTML = '';
+        this.diffEditor = monaco.editor.createDiffEditor(container, {
+            theme: 'vs-dark',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 14,
+            readOnly: true,
+            renderSideBySide: true,
+            automaticLayout: true
+        });
+        this.diffEditor.setModel({
+            original: monaco.editor.createModel(snap.content, 'text/plain'),
+            modified: monaco.editor.createModel(currentContent, 'text/plain')
+        });
+        document.getElementById('diffToolbar').style.display = 'flex';
+        document.getElementById('mainToolbar').style.display = 'none';
+        document.getElementById('restoreSnapshotBtn').dataset.snapshotId = snapshotId;
+    },
+    closeDiff() {
+        if (this.diffEditor) { this.diffEditor.dispose(); this.diffEditor = null; }
+        document.getElementById('monacoContainer').innerHTML = '';
+        this.initMonacoEditor();
+        document.getElementById('diffToolbar').style.display = 'none';
+        document.getElementById('mainToolbar').style.display = 'flex';
+    },
+    async restoreSnapshot() {
+        const id = document.getElementById('restoreSnapshotBtn').dataset.snapshotId;
+        if (id) this.restoreSnapshotById(id);
+    },
+    async restoreSnapshotById(id) {
+        this.showConfirm('Restaurar esta versão? O código atual será sobrescrito.', async () => {
+            const { data: snap } = await supabase.from('snapshots').select('content').eq('id', id).single();
+            if (!snap) return;
+            this.editor.setValue(snap.content);
+            this.editor.updateOptions({ readOnly: false });
+            this.isReadonly = false;
+            document.getElementById('readonlyOverlay').classList.remove('show');
+            this.onEditorInput();
+            this.toast('✅ Versão restaurada!');
+            if (this.diffEditor) this.closeDiff();
+        });
+    },
+    exitReadonly() {
+        this.isReadonly = false;
+        if (this.editor) this.editor.updateOptions({ readOnly: false });
+        document.getElementById('readonlyOverlay').classList.remove('show');
+    },
+    openTasks() { document.getElementById('tasksPanel').classList.add('open'); },
+    closeTasks() { document.getElementById('tasksPanel').classList.remove('open'); },
+    listenTasks() {
+        const channel = supabase.channel('tasks:'+this.currentRepo.id)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `repo_id=eq.${this.currentRepo.id}` }, () => this.fetchTasks())
+            .subscribe();
+        this.unsubscribers.push(() => channel.unsubscribe());
+        this.fetchTasks();
+    },
+    async fetchTasks() {
+        const { data: tasks } = await supabase.from('tasks').select('*').eq('repo_id', this.currentRepo.id).order('created_at');
+        this.renderTasks({ docs: tasks.map(t => ({ id: t.id, data: () => t })) });
+    },
+    renderTasks(snap) {
+        const cols = document.getElementById('tasksColumns');
+        const tasks = { todo:[], progress:[], done:[] };
+        snap.docs.forEach(doc => {
+            const data = doc.data();
+            data.id = doc.id;
+            if (data.status === 'done') tasks.done.push(data);
+            else if (data.status === 'progress') tasks.progress.push(data);
+            else tasks.todo.push(data);
+        });
+        cols.innerHTML = '';
+        const columns = [
+            { id:'todo', label:'A fazer', color:'var(--t2)' },
+            { id:'progress', label:'Em progresso', color:'var(--or)' },
+            { id:'done', label:'Concluído', color:'var(--gn)' }
+        ];
+        columns.forEach(col => {
+            const div = document.createElement('div');
+            div.className = 'tcol';
+            const title = document.createElement('div');
+            title.className = 'tct';
+            title.style.color = col.color;
+            title.textContent = col.label + ' (' + tasks[col.id].length + ')';
+            div.appendChild(title);
+            tasks[col.id].forEach(task => {
+                const item = document.createElement('div');
+                item.className = 'ti';
+                const checkbox = document.createElement('div');
+                checkbox.className = 'tcb' + (task.status === 'done' ? ' done' : '');
+                checkbox.onclick = () => this.toggleTask(task.id, task.status);
+                const text = document.createElement('span');
+                text.className = 'tt' + (task.status === 'done' ? ' done' : '');
+                text.textContent = task.text;
+                const delBtn = document.createElement('button');
+                delBtn.className = 'tdel';
+                delBtn.textContent = '✕';
+                delBtn.onclick = () => this.deleteTask(task.id);
+                item.appendChild(checkbox);
+                item.appendChild(text);
+                item.appendChild(delBtn);
+                div.appendChild(item);
+            });
+            cols.appendChild(div);
+        });
+    },
+    async addTask() {
+        const text = document.getElementById('taskInput').value.trim();
+        if (!text || !this.currentRepo) return;
+        document.getElementById('taskInput').value = '';
+        await supabase.from('tasks').insert({ repo_id: this.currentRepo.id, text, status: 'todo' });
+    },
+    async toggleTask(id, currentStatus) {
+        const newStatus = currentStatus === 'todo' ? 'progress' : (currentStatus === 'progress' ? 'done' : 'todo');
+        await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
+    },
+    async deleteTask(id) {
+        APP.showConfirm('Excluir esta tarefa permanentemente?', async () => {
+            await supabase.from('tasks').delete().eq('id', id);
+        });
+    },
+    openChat() { document.getElementById('chatPanel').classList.add('open'); },
+    closeChat() { document.getElementById('chatPanel').classList.remove('open'); },
+    listenChat() {
+        const channel = supabase.channel('chat:'+this.currentRepo.id)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chat', filter: `repo_id=eq.${this.currentRepo.id}` }, () => this.fetchChat())
+            .subscribe();
+        this.unsubscribers.push(() => channel.unsubscribe());
+        this.fetchChat();
+    },
+    async fetchChat() {
+        const { data: messages } = await supabase.from('chat').select('*').eq('repo_id', this.currentRepo.id).order('created_at', { ascending: true }).limit(200);
+        const list = document.getElementById('chatMessages');
+        list.innerHTML = '';
+        messages.forEach(msg => {
+            const isSelf = msg.author_id === this.user.id;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'chat-message ' + (isSelf ? 'self' : 'other');
+            const avatar = document.createElement('div');
+            avatar.className = 'chat-avatar';
+            avatar.textContent = msg.author_email[0].toUpperCase();
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            bubble.innerHTML = `<span>${this.sanitize(msg.text)}</span><span class="chat-time">${new Date(msg.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>`;
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(bubble);
+            list.appendChild(wrapper);
+        });
+        list.scrollTop = list.scrollHeight;
+    },
+    sanitize(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    },
+    async sendChatMessage() {
+        let text = document.getElementById('chatInput').value.trim();
+        if (!text || !this.currentRepo) return;
+        text = this.sanitize(text);
+        if (text.length > 500) return this.toast('Máximo 500 caracteres.', 'err');
+        document.getElementById('chatInput').value = '';
+        await supabase.from('chat').insert({
+            repo_id: this.currentRepo.id,
+            author_id: this.user.id,
+            author_email: this.user.email,
+            text
+        });
+    },
+    openShareModal() {
+        const collabLink = location.origin + location.pathname + '?repo=' + this.currentRepo.id;
+        const readonlyLink = location.origin + location.pathname + '?repo=' + this.currentRepo.id + '&view=' + this.currentRepo.readonly_token;
+        document.getElementById('shareCollabLink').value = collabLink;
+        document.getElementById('shareReadonlyLink').value = readonlyLink;
+        document.getElementById('shareModal').classList.add('show');
+    },
+    copyShareLink(type) {
+        const input = document.getElementById(type === 'collab' ? 'shareCollabLink' : 'shareReadonlyLink');
+        input.select();
+        document.execCommand('copy');
+        this.toast('✅ Link copiado!');
+    },
+    async showMembers() {
+        if (!this.currentRepo) return;
+        const list = document.getElementById('membersList');
+        list.innerHTML = 'Carregando...';
+        document.getElementById('membersModal').classList.add('show');
+        const { data: repo } = await supabase.from('repos').select('members, member_emails, owner_id').eq('id', this.currentRepo.id).single();
+        const members = repo.members;
+        const emails = repo.member_emails;
+        list.innerHTML = '';
+        members.forEach((uid, i) => {
+            const email = emails[uid] || uid.substring(0,8) + '...';
+            const isOwner = uid === repo.owner_id;
+            const isSelf = uid === this.user.id;
+            const isOnline = isSelf || (this.onlineUsers[uid] && this.onlineUsers[uid].online);
+            const row = document.createElement('div');
+            row.className = 'mr';
+            row.innerHTML = `<div class="ma" style="background:${CURSOR_COLORS[i % CURSOR_COLORS.length]}">${email[0].toUpperCase()}</div>
+                <div class="me">${email}${isSelf ? ' (você)' : ''}</div>
+                <div class="mrole">${isOwner ? '👑 Dono' : 'Colaborador'}</div>
+                <div class="mon${isOnline ? '' : ' offline'}"></div>`;
+            list.appendChild(row);
+        });
+    },
+    downloadCurrentFile() {
+        if (!this.currentFile) return;
+        const content = this.editor.getValue();
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = this.currentFile.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+    runCode() {
+        const code = this.editor.getValue();
+        const file = this.currentFile;
+        if (!file) return;
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'html') {
+            this.switchOutput('preview');
+            document.getElementById('previewOut').src = URL.createObjectURL(new Blob([code], { type: 'text/html' }));
+            return;
+        }
+        this.switchOutput('console');
+        const outputEl = document.getElementById('consoleOut');
+        if (ext === 'js') {
+            outputEl.textContent = '⏳ Executando...';
+            const sandboxFrame = document.createElement('iframe');
+            sandboxFrame.style.display = 'none';
+            sandboxFrame.sandbox = 'allow-scripts';
+            document.body.appendChild(sandboxFrame);
+            let finished = false;
+            const timeoutId = setTimeout(() => {
+                if (!finished) {
+                    outputEl.textContent = '⏱ Timeout: execução excedeu 5 segundos';
+                    sandboxFrame.remove();
+                }
+            }, 5000);
+            const handler = (event) => {
+                if (event.source !== sandboxFrame.contentWindow) return;
+                finished = true;
+                clearTimeout(timeoutId);
+                window.removeEventListener('message', handler);
+                sandboxFrame.remove();
+                outputEl.textContent = event.data.error ? '❌ ' + event.data.error : (event.data.logs || '✅ Executado sem output');
+            };
+            window.addEventListener('message', handler);
+            const safeCode = code.replace(/<\/script>/gi, '<\\/script>');
+            sandboxFrame.srcdoc = '<!DOCTYPE html><html><body><script>' +
+                'var _logs = []; console.log = function() { _logs.push(Array.from(arguments).map(String).join(" ")); };' +
+                'try {' + safeCode + '; parent.postMessage({ logs: _logs.join("\\n") }, "*"); } catch(e) { parent.postMessage({ error: e.message }, "*"); }' +
+                '<\/script></body></html>';
+        } else {
+            outputEl.textContent = '▶ Use .js ou .html';
+        }
+    },
+    switchOutput(tab) {
+        document.getElementById('tabConsole').classList.toggle('active', tab === 'console');
+        document.getElementById('tabPreview').classList.toggle('active', tab === 'preview');
+        document.getElementById('consoleOut').style.display = tab === 'console' ? 'block' : 'none';
+        document.getElementById('previewOut').style.display = tab === 'preview' ? 'block' : 'none';
+    },
+    copyRepoId() {
+        const id = this.currentRepo?.id || '';
+        if (!id) return;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(id).then(() => this.toast('✅ ID copiado!'));
+        } else {
+            this.toast('Copie: ' + id);
+        }
+    },
+    setupSplitter() {
+        const self = this;
+        const sp = document.getElementById('splitterH');
+        const op = document.querySelector('.op');
+        let dragging = false, startY, startH;
+        sp.onmousedown = (e) => {
+            dragging = true; startY = e.clientY; startH = op.offsetHeight;
+            sp.classList.add('dragging');
+        };
+        this._splitterMove = (e) => {
+            if (!dragging) return;
+            const h = Math.max(60, Math.min(500, startH + (startY - e.clientY)));
+            op.style.height = h + 'px';
+            if (self.editor) self.editor.layout();
+        };
+        this._splitterUp = () => {
+            dragging = false; sp.classList.remove('dragging');
+        };
+        document.addEventListener('mousemove', this._splitterMove);
+        document.addEventListener('mouseup', this._splitterUp);
+    },
+    toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    },
+    showConfirm(message, onConfirm) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999';
+        const box = document.createElement('div');
+        box.style.cssText = 'background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:24px;max-width:360px;width:90%';
+        box.innerHTML = `<p style="margin-bottom:20px;font-size:14px;color:var(--tx);line-height:1.5">${message}</p>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button id="confirmCancel" style="padding:8px 16px;background:transparent;color:var(--t2);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;font-size:13px">Cancelar</button>
+                <button id="confirmOk" style="padding:8px 16px;background:var(--rd);color:#fff;border:none;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600">Confirmar</button>
+            </div>`;
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        document.getElementById('confirmCancel').onclick = () => overlay.remove();
+        document.getElementById('confirmOk').onclick = () => { overlay.remove(); onConfirm(); };
+    },
+    cleanup() {
+        this.unsubscribers.forEach(u => typeof u === 'function' && u());
+        this.unsubscribers = [];
+        if (this.repoListener) { this.repoListener.unsubscribe(); this.repoListener = null; }
+        if (this._rtdbPresenceRef) { this._rtdbPresenceRef.unsubscribe(); this._rtdbPresenceRef = null; }
+        if (this.yprovider) { this.yprovider.disconnect(); this.ydoc.destroy(); this.yprovider = null; }
+        clearTimeout(this.syncTimer);
+        clearTimeout(this.cursorTimer);
+    },
+    toast(msg, type) {
+        const el = document.createElement('div');
+        el.className = 'toast';
+        if (type === 'err') el.style.borderColor = 'rgba(248,81,73,.4)';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 2500);
+    },
+    showError(msg) {
+        const el = document.getElementById('errMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 4000);
+    },
+    translateError(error) {
+        const map = {
+            'Invalid login credentials': 'Email ou senha incorretos.',
+            'Email not confirmed': 'Email não confirmado.'
+        };
+        return map[error.message] || error.message;
+    },
+    startUpgrade() {
+        // Redireciona para a Edge Function do Stripe
+        window.location.href = STRIPE_CHECKOUT_FUNCTION_URL + '?userId=' + this.user.id + '&email=' + encodeURIComponent(this.user.email);
+    },
+    initMonacoEditor() {
+        const self = this;
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) {
+            const ta = document.getElementById('mobileEditor');
+            ta.style.display = 'block';
+            this.editor = {
+                _ta: ta,
+                getValue: () => ta.value,
+                setValue: (v) => ta.value = v,
+                updateOptions: (opts) => { if (opts.readOnly !== undefined) ta.readOnly = opts.readOnly; },
+                getPosition: () => null,
+                setPosition: () => {},
+                getModel: () => null,
+                layout: () => {},
+                deltaDecorations: () => [],
+                onDidChangeModelContent: (cb) => ta.addEventListener('input', cb),
+                onDidChangeCursorPosition: () => {},
+                dispose: () => {}
+            };
+            ta.addEventListener('input', () => self.onEditorInput());
+            return;
+        }
+        // Monaco desktop
+        const loaderScript = document.createElement('script');
+        loaderScript.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js';
+        loaderScript.onload = () => {
+            require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
+            require(['vs/editor/editor.main'], () => {
+                self.editor = monaco.editor.create(document.getElementById('monacoContainer'), {
+                    value: '',
+                    language: 'javascript',
+                    theme: 'vs-dark',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontSize: 14,
+                    minimap: { enabled: false },
+                    wordWrap: 'on',
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    tabSize: 2,
+                    renderLineHighlight: 'all',
+                    readOnly: self.isReadonly
+                });
+                self.editor.onDidChangeModelContent(() => self.onEditorInput());
+                self.editor.onDidChangeCursorPosition((e) => self.broadcastCursor(e));
+                if (self.currentFile && self.currentFile.content) {
+                    self.editor.setValue(self.currentFile.content);
+                }
+            });
+        };
+        loaderScript.onerror = () => self.toast('Falha ao carregar o editor.', 'err');
+        document.head.appendChild(loaderScript);
+    }
+};
+
+// Iniciar a aplicação quando a página carregar
+window.addEventListener('DOMContentLoaded', () => {
     APP.initMonacoEditor();
-}
+    // O init() será chamado no final da inicialização do Monaco (desktop) ou diretamente no mobile
+    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // Mobile já inicializou o editor fake, chama init agora
+        APP.init();
+    } else {
+        // O Monaco carregará e no final do require chamamos APP.init() manualmente
+        // Para isso adicionamos um callback no final do require
+        const origRequire = window.require;
+        // Ajuste: vamos chamar init no onload do loader
+        const checkMonaco = setInterval(() => {
+            if (APP.editor && typeof APP.editor.getValue === 'function') {
+                clearInterval(checkMonaco);
+                APP.init();
+            }
+        }, 100);
+    }
+});
 </script>
 </body>
 </html>
